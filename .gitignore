@@ -1,0 +1,7 @@
+*
+
+!.gitignore
+!LICENCE
+!bot.py
+!database.py
+!get_information.py
