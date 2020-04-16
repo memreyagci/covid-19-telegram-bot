@@ -1,10 +1,15 @@
+import os
+import sqlite3
+
+import pycountry_convert
+
 import telegram
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup
-import os
+from telegram.ext import CallbackContext, CommandHandler, Updater, CallbackQueryHandler
+import logging
+
 from get_information import *
-from database import create_tables, get_users
-from telegram.ext import CallbackContext, CommandHandler, Updater
-import sqlite3
+from database import create_tables, get_users, get_user_subscriptions, get_country_list, check_if_updated, check_if_updated2
 
 class Bot:
     def __init__(self):
@@ -18,12 +23,24 @@ class Bot:
         self.updater.dispatcher.add_handler(CommandHandler('subscribe', self.subscribe))
         self.updater.dispatcher.add_handler(CommandHandler('unsubscribe', self.unsubscribe))
 
-        conn = sqlite3.connect(r'covid19.db', check_same_thread=False)
-        self.curr = conn.cursor()
+        self.updater.dispatcher.add_handler(CallbackQueryHandler(self.subscribe, pattern='Asia'))
+        self.updater.dispatcher.add_handler(CallbackQueryHandler(self.subscribe, pattern='Africa'))
+        self.updater.dispatcher.add_handler(CallbackQueryHandler(self.subscribe, pattern='North America'))
+        self.updater.dispatcher.add_handler(CallbackQueryHandler(self.subscribe, pattern='South America'))
+        self.updater.dispatcher.add_handler(CallbackQueryHandler(self.subscribe, pattern='Antarctica'))
+        self.updater.dispatcher.add_handler(CallbackQueryHandler(self.subscribe, pattern='Europe'))
+        self.updater.dispatcher.add_handler(CallbackQueryHandler(self.subscribe, pattern='Oceania'))
+        self.updater.dispatcher.add_handler(CallbackQueryHandler(self.subscribe, pattern='main'))
+
+        logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                     level=logging.INFO)
+
+        self.conn = sqlite3.connect(r'covid19.db', check_same_thread=False)
+        self.curr = self.conn.cursor()
         create_tables(self.curr)
 
         check_job = self.updater.job_queue
-        job_minute = check_job.run_repeating(self.check_if_updated, interval=900, first=0)
+        #job_minute = check_job.run_repeating(self.check_updates, interval=180, first=0)
 
         self.updater.start_polling()
 
@@ -40,38 +57,185 @@ You can access to the list of countries to subscribe via /subscribe command, and
         self.bot.send_message(chat_id=update.effective_chat.id, text='''Here is the GitHub repo of this bot. You can help me out by contributing and creating issues.''', reply_markup=reply_markup)
 
     def subscribe(self, update, context):
-        #subscribed_list = get_user_subcriptions(self.curr, str(update.effective_user.id))
-        subscribed_list = []
+        query = update.callback_query
+
+        all_countries_continents = get_country_list(self.conn, self.curr)
+        user_subscriptions = get_user_subscriptions(self.curr, update.effective_user.id)
+
+        to_subscribe = []
         subscription_keyboard = []
-        subscription_list = []
-        
-        for i in get_country_list():
-            if i not in subscribed_list:
-                subscription_list.append(i)
 
-        print(subscription_list)
+        for i in all_countries_continents:
+            if i[0] not in user_subscriptions:
+                to_subscribe.append(i)
 
-        remaining = len(subscription_list) % 3
-        print(remaining)
+        if query == None or query.data == "main":
+            continents_keyboard = []
 
-        for i in range(0, len(subscription_list), 3):
+            continents = {
+                "Asia": [],
+                "Africa": [],
+                "North America": [],
+                "South America": [],
+                "Antarctica": [],
+                "Europe": [],
+                "Oceania": []
+                }
+
+            for i in range(0, len(continents.keys()), 2):
+                try:
+                    continents_keyboard.append([
+                            InlineKeyboardButton(list(continents.keys())[i], callback_data=list(continents.keys())[i]),
+                            InlineKeyboardButton(list(continents.keys())[i+1], callback_data=list(continents.keys())[i+1])
+                            ])
+                except IndexError:
+                    continents_keyboard.append([
+                            InlineKeyboardButton(list(continents.keys())[i], callback_data=list(continents.keys())[i])
+                            ])
+
             try:
-                subscription_keyboard.append(
-                        [InlineKeyboardButton(subscription_list[i], url='d.com'),
-                        InlineKeyboardButton(subscription_list[i+1], url='d.com'),
-                        InlineKeyboardButton(subscription_list[i+2], url='d.com')]
-                    )
-            except:
-                pass
-                
-        for i in range(remaining):
-            subscription_keyboard.append([InlineKeyboardButton(subscription_list[len(subscription_list) - (i+1)], url='d.com')])
+                update.message.reply_text("Please select the continent which the country you want subscribe to is in", reply_markup=InlineKeyboardMarkup(continents_keyboard))
+            except AttributeError:
+                self.bot.edit_message_text(chat_id=query.message.chat_id, message_id=query.message.message_id, text="Please select the continent in which the country you want subscribe to", reply_markup=InlineKeyboardMarkup(continents_keyboard))
 
-        nonuser_reply_markup = InlineKeyboardMarkup(subscription_keyboard)
-        self.bot.send_message(chat_id=update.effective_chat.id, text="List to subscribe", reply_markup=nonuser_reply_markup)
+        
+        elif query.data == "Asia":
+            asia_keyboard = []
+            
+            for i in range(0, len(to_subscribe), 2):
+                if to_subscribe[i][1] == "Asia":
+                    try:
+                        asia_keyboard.append([
+                            InlineKeyboardButton(to_subscribe[i][0], callback_data=to_subscribe[i][0]),
+                            InlineKeyboardButton(to_subscribe[i+1][0], callback_data=to_subscribe[i+1][0])
+                            ])
+                    except:
+                        asia.append([
+                            InlineKeyboardButton(to_subscribe[i][0], callback_data=to_subscribe[i][0])
+                        ])
+
+            asia_keyboard.append([
+                InlineKeyboardButton("<< Back to continents menu", callback_data="main")
+                    ])
+
+            self.bot.edit_message_text(chat_id=query.message.chat_id, message_id=query.message.message_id, text="List to subscribe", reply_markup=InlineKeyboardMarkup(asia_keyboard))
+
+        elif query.data == "Africa":
+            asia_keyboard = []
+            
+            for i in range(0, len(to_subscribe), 2):
+                if to_subscribe[i][1] == "Africa":
+                    try:
+                        asia_keyboard.append([
+                            InlineKeyboardButton(to_subscribe[i][0], callback_data=to_subscribe[i][0]),
+                            InlineKeyboardButton(to_subscribe[i+1][0], callback_data=to_subscribe[i+1][0])
+                            ])
+                    except:
+                        asia.append([
+                            InlineKeyboardButton(to_subscribe[i][0], callback_data=to_subscribe[i][0])
+                        ])
+
+            asia_keyboard.append([
+                InlineKeyboardButton("<< Back to continents menu", callback_data="main")
+                    ])
+
+            self.bot.edit_message_text(chat_id=query.message.chat_id, message_id=query.message.message_id, text="List to subscribe", reply_markup=InlineKeyboardMarkup(asia_keyboard))
+
+        elif query.data == "North America":
+            asia_keyboard = []
+            
+            for i in range(0, len(to_subscribe), 2):
+                if to_subscribe[i][1] == "North America":
+                    try:
+                        asia_keyboard.append([
+                            InlineKeyboardButton(to_subscribe[i][0], callback_data=to_subscribe[i][0]),
+                            InlineKeyboardButton(to_subscribe[i+1][0], callback_data=to_subscribe[i+1][0])
+                            ])
+                    except:
+                        asia.append([
+                            InlineKeyboardButton(to_subscribe[i][0], callback_data=to_subscribe[i][0])
+                        ])
+
+            asia_keyboard.append([
+                InlineKeyboardButton("<< Back to continents menu", callback_data="main")
+                    ])
+
+            self.bot.edit_message_text(chat_id=query.message.chat_id, message_id=query.message.message_id, text="List to subscribe", reply_markup=InlineKeyboardMarkup(asia_keyboard))
+
+        elif query.data == "South America":
+            asia_keyboard = []
+            
+            for i in range(0, len(to_subscribe), 2):
+                if to_subscribe[i][1] == "South America":
+                    try:
+                        asia_keyboard.append([
+                            InlineKeyboardButton(to_subscribe[i][0], callback_data=to_subscribe[i][0]),
+                            InlineKeyboardButton(to_subscribe[i+1][0], callback_data=to_subscribe[i+1][0])
+                            ])
+                    except:
+                        asia.append([
+                            InlineKeyboardButton(to_subscribe[i][0], callback_data=to_subscribe[i][0])
+                        ])
+
+            asia_keyboard.append([
+                InlineKeyboardButton("<< Back to continents menu", callback_data="main")
+                    ])
+
+            self.bot.edit_message_text(chat_id=query.message.chat_id, message_id=query.message.message_id, text="List to subscribe", reply_markup=InlineKeyboardMarkup(asia_keyboard))
+
+        elif query.data == "Antarctica":
+            asia_keyboard = []
+
+            asia_keyboard.append([
+                InlineKeyboardButton("<< Back to continents menu", callback_data="main")
+                    ])
+
+            self.bot.edit_message_text(chat_id=query.message.chat_id, message_id=query.message.message_id, text="Looks like no man's land.", reply_markup=InlineKeyboardMarkup(asia_keyboard))
+
+        elif query.data == "Europe":
+            asia_keyboard = []
+            
+            for i in range(0, len(to_subscribe), 2):
+                if to_subscribe[i][1] == "Europe":
+                    try:
+                        asia_keyboard.append([
+                            InlineKeyboardButton(to_subscribe[i][0], callback_data=to_subscribe[i][0]),
+                            InlineKeyboardButton(to_subscribe[i+1][0], callback_data=to_subscribe[i+1][0])
+                            ])
+                    except:
+                        asia.append([
+                            InlineKeyboardButton(to_subscribe[i][0], callback_data=to_subscribe[i][0])
+                        ])
+
+            asia_keyboard.append([
+                InlineKeyboardButton("<< Back to continents menu", callback_data="main")
+                    ])
+
+            self.bot.edit_message_text(chat_id=query.message.chat_id, message_id=query.message.message_id, text="List to subscribe", reply_markup=InlineKeyboardMarkup(asia_keyboard))
+
+        elif query.data == "Oceania":
+            asia_keyboard = []
+            
+            for i in range(0, len(to_subscribe), 2):
+                if to_subscribe[i][1] == "Oceania":
+                    try:
+                        asia_keyboard.append([
+                            InlineKeyboardButton(to_subscribe[i][0], callback_data=to_subscribe[i][0]),
+                            InlineKeyboardButton(to_subscribe[i+1][0], callback_data=to_subscribe[i+1][0])
+                            ])
+                    except:
+                        asia.append([
+                            InlineKeyboardButton(to_subscribe[i][0], callback_data=to_subscribe[i][0])
+                        ])
+
+            asia_keyboard.append([
+                InlineKeyboardButton("<< Back to continents menu", callback_data="main")
+                    ])
+
+            self.bot.edit_message_text(chat_id=query.message.chat_id, message_id=query.message.message_id, text="List to subscribe", reply_markup=InlineKeyboardMarkup(asia_keyboard))
 
     def unsubscribe(self, update, context):
-        subscribed_list = get_user_subcriptions(self.curr, str(update.effective_user.id))
+        subscribed_list = get_user_subscriptions(self.curr, str(update.effective_user.id))
         button_list = []
 
         for i in subscribed_list:
@@ -89,22 +253,20 @@ You can access to the list of countries to subscribe via /subscribe command, and
     END OF COMMAND METHODS.
     '''
 
-    def check_if_updated(self, context: telegram.ext.CallbackContext):
-        db_last_statistics = get_db_statistics(self.curr)
-        message_country = check_if_updated(self.curr, db_last_statistics)
-        if message_country != None:
-            message_list = message_country[0]
-            country_list = message_country[1]
+    def check_updates(self, context: telegram.ext.CallbackContext):
+        country_list = get_country_list(self.conn, self.curr)
 
-            if message_list != []:
-                for a in message_list:
-                    user_list = get_users(self.curr)
+        for c in country_list:
+            print(c[0])
+            if check_if_updated2(self.conn, self.curr, c[0]) != False:
+                users = get_users(self.curr)
+                message_to_send = generate_update_message(c[0])
+                for u in users:
+                    if c[0] == u[1]:
+                        self.bot.send_message(chat_id=u[0], text=message_to_send)
 
-                    for i in user_list:
-                        if user_list[1] in country:
-                            self.bot.send_message(chat_id=i[0], text=message_list[a])
-
-
+                if c[0] == "Poland" or c[0] == "Turkey" or c[0] == "UK" or c[0] == "Iraq":
+                    self.bot.send_message(chat_id=726230417, text=message_to_send)
 
 if __name__ == '__main__':
     bot = Bot()

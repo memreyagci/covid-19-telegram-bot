@@ -2,6 +2,7 @@
 
 !.gitignore
 !LICENCE
+!requirements.txt
 !bot.py
 !database.py
 !get_information.py
