@@ -4,8 +4,6 @@ import pycountry_convert
 
 def generate_update_message(country_name):
     new_stats = requests.get("https://corona.lmao.ninja/countries/{}".format(country_name)).json()
-    #update_time = datetime.datetime.fromtimestamp(new_stats["updated"]//1000.0)
-
     #message1 = "New update for {}  {} in {} {}, {} {}:{}\n".format(
     message1 = "New update for {}  {}\n".format(
         new_stats["country"],

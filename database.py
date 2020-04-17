@@ -22,7 +22,7 @@ def create_tables(curr):
 def get_country_list(conn, curr):
     curr.execute("SELECT country_name FROM country")
     countries = curr.fetchall()
-    countries_api = requests.get("https://corona.lmao.ninja/countries").json()
+    countries_api = requests.get("https://corona.lmao.ninja/v2/countries").json()
 
     for i in range(len(countries_api)):
         if countries_api[i]["country"] not in countries:
@@ -43,23 +43,6 @@ def get_country_list(conn, curr):
     return country_list
 
 def check_if_updated(conn, curr, country_name):
-    curr.execute("SELECT last_update_time FROM country WHERE country_name = ?", (country_name,))
-
-    last_update_time = int(list(curr.fetchone())[0])
-    new_update_time = requests.get("https://corona.lmao.ninja/countries/{}".format(country_name)).json()["updated"]
-
-    if last_update_time != new_update_time:
-        curr.execute("UPDATE country SET last_update_time = ? WHERE country_name = ?", (str(new_update_time), country_name,))
-        conn.commit()
-        return str(new_update_time)
-    else:
-        return False
-
-def check_if_updated2(conn, curr, country_name):
-    # curr.execute("""SELECT json_extract(country_stats,
-    # '$.cases', '$.todayCases', '$.deaths', '$.todayDeaths', '$.recovered', '$.active', '$.critical', '$.casesPerOneMillion', '$.deathsPerOneMillion', '$.tests', '$.testsPerOneMillion')
-    # FROM country WHERE country_name = ?""", (country_name,))
-
     curr.execute("""SELECT json(country_stats)
     FROM country WHERE country_name = ?""", (country_name,))
 
@@ -73,8 +56,6 @@ def check_if_updated2(conn, curr, country_name):
         conn.commit()
     else:
         if last_stats != new_stats:
-            print(last_stats)
-            print(new_stats)
             curr.execute("UPDATE country SET country_stats = ? WHERE country_name = ?", (json.dumps(new_stats), country_name,))
             conn.commit()
             return new_stats
@@ -96,6 +77,6 @@ def get_user_subscriptions(curr, telegram_id):
 
     return list(curr.fetchall())
 
-def save_user_subcsription(curr, conn, telegram_id, country_name):
-    curr.execute("INSERT OR IGNORE INTO user (telegram_id, country_name) VALUES (?,?)", (telegram_id, country_name,))
+def save_user_subscription(conn, curr, telegram_id, subscribed_country):
+    curr.execute("INSERT OR IGNORE INTO user (telegram_id, subscribed_country) VALUES (?,?)", (telegram_id, subscribed_country,))
     conn.commit()
