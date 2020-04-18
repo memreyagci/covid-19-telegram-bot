@@ -2,7 +2,9 @@
 
 !.gitignore
 !LICENCE
+!README.md
 !requirements.txt
+
 !bot.py
 !database.py
 !get_information.py
