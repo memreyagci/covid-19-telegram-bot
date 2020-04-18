@@ -3,7 +3,7 @@ import datetime
 import pycountry_convert
 
 def generate_update_message(country_name):
-    new_stats = requests.get("https://corona.lmao.ninja/countries/{}".format(country_name)).json()
+    new_stats = requests.get("https://corona.lmao.ninja/v2/countries/{}".format(country_name)).json()
     #message1 = "New update for {}  {} in {} {}, {} {}:{}\n".format(
     message1 = "New update for {}  {}\n".format(
         new_stats["country"],
@@ -51,8 +51,12 @@ def generate_update_message(country_name):
     return message1 + message2
 
 def get_country_flag(country_name):
-    code = requests.get("https://corona.lmao.ninja/countries/{}".format(country_name)).json()["countryInfo"]["iso2"]
-
     OFFSET = 127462 - ord('A')
 
+    try:    
+        code = pycountry_convert.country_name_to_country_alpha2(country_name)
+    except:
+        code = requests.get("https://corona.lmao.ninja/v2/countries/{}".format(country_name)).json()["countryInfo"]["iso2"]
+
     return chr(ord(code[0]) + OFFSET) + chr(ord(code[1]) + OFFSET)
+

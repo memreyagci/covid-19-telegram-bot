@@ -75,8 +75,27 @@ def get_users(curr):
 def get_user_subscriptions(curr, telegram_id):
     curr.execute("SELECT subscribed_country FROM user WHERE telegram_id = ?", (telegram_id,))
 
-    return list(curr.fetchall())
+    subscription_list = []
+    
+    for i in curr.fetchall():
+        subscription_list.append(list(i)[0])
+    
+    return subscription_list
+
+def get_country_by_continent(curr, country_continent):
+    curr.execute("SELECT country_name FROM country WHERE country_continent = ?", (country_continent,))
+
+    country_list = []
+
+    for i in curr.fetchall():
+        country_list.append(list(i)[0])
+
+    return country_list
 
 def save_user_subscription(conn, curr, telegram_id, subscribed_country):
     curr.execute("INSERT OR IGNORE INTO user (telegram_id, subscribed_country) VALUES (?,?)", (telegram_id, subscribed_country,))
+    conn.commit()
+
+def remove_user_subscription(conn, curr, telegram_id, country_to_unsubscribe):
+    curr.execute("DELETE FROM user WHERE telegram_id=? and subscribed_country=?", (telegram_id, country_to_unsubscribe,))
     conn.commit()
