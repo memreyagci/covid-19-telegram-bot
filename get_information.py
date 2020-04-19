@@ -45,9 +45,7 @@ def generate_update_message(country_name):
             new_stats["tests"],
             new_stats["critical"]
         )
-
-    print(message1+message2)
-
+        
     return message1 + message2
 
 def get_country_flag(country_name):

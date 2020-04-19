@@ -14,14 +14,12 @@ def create_tables(curr):
         """ CREATE TABLE IF NOT EXISTS country (
         country_name text UNIQUE,
         country_continent text,
-        last_update_time text,
         country_stats json
         ); """
         )
 
-def get_country_list(conn, curr):
-    curr.execute("SELECT country_name FROM country")
-    countries = curr.fetchall()
+def check_new_country(conn, curr):
+    countries = get_all_countries(curr)
     countries_api = requests.get("https://corona.lmao.ninja/v2/countries").json()
 
     for i in range(len(countries_api)):
@@ -32,15 +30,30 @@ def get_country_list(conn, curr):
                 conn.commit()
             except:
                 pass
+
+    return get_all_countries(curr)
+
+# def create_country_list(conn, curr):
+#     countries = curr.fetchall()
+#     countries_api = requests.get("https://corona.lmao.ninja/v2/countries").json()
+
+#     for i in range(len(countries_api)):
+#         if countries_api[i]["country"] not in countries:
+#             try:
+#                 continent = pycountry_convert.convert_continent_code_to_continent_name(pycountry_convert.country_alpha2_to_continent_code(countries_api[i]["countryInfo"]["iso2"]))
+#                 curr.execute("INSERT OR IGNORE INTO country (country_name, country_continent) VALUES (?,?)", (countries_api[i]["country"], continent,))
+#                 conn.commit()
+#             except:
+#                 pass
                 
-    curr.execute("SELECT country_name, country_continent FROM country")
+#     return get_all_countries(curr)
 
-    country_list = []
+    # country_list = []
 
-    for i in curr.fetchall():
-        country_list.append(list(i))
+    # for i in curr.fetchall():
+    #     country_list.append(list(i))
 
-    return country_list
+    # return country_list
 
 def get_all_countries(curr):
     curr.execute("SELECT country_name FROM country")

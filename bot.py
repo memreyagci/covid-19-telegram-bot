@@ -9,7 +9,7 @@ from telegram.ext import CallbackContext, CommandHandler, Updater, CallbackQuery
 import logging
 
 from get_information import *
-from database import create_tables, get_users, get_nonsubscribed_countries_by_continent, get_user_subscriptions, get_all_countries, get_country_list, check_if_updated, save_user_subscription, remove_user_subscription, get_country_by_continent
+from database import create_tables, check_new_country, get_users, get_nonsubscribed_countries_by_continent, get_user_subscriptions, get_all_countries, check_if_updated, save_user_subscription, remove_user_subscription, get_country_by_continent
 
 class Bot:
     def __init__(self):
@@ -18,8 +18,9 @@ class Bot:
         logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                      level=logging.INFO)
 
-        self.conn = sqlite3.connect(r'covid19.db', check_same_thread=False)
+        self.conn = sqlite3.connect(r'covid19.db', isolation_level=None, check_same_thread=False)
         self.curr = self.conn.cursor()
+        self.curr_job = self.conn.cursor()
         create_tables(self.curr)
 
         self.bot = telegram.Bot(token=api)
@@ -35,7 +36,7 @@ class Bot:
         for i in self.continents:
             self.updater.dispatcher.add_handler(CallbackQueryHandler(self.subscribe, pattern=i))
 
-        for i in get_country_list(self.conn, self.curr):
+        for i in check_new_country(self.conn, self.curr):
             self.updater.dispatcher.add_handler(CallbackQueryHandler(self.subscribe, pattern=i[0]))
             self.updater.dispatcher.add_handler(CallbackQueryHandler(self.unsubscribe, pattern='{}_unsubscribe'.format(i[0])))
         
@@ -152,14 +153,15 @@ You can access to the list of countries to subscribe via /subscribe command, and
     '''
 
     def check_updates(self, context: telegram.ext.CallbackContext):
-        country_list = get_country_list(self.conn, self.curr)
+        check_new_country(self.conn, self.curr_job)
+        country_list = get_all_countries(self.curr_job)
 
         for c in country_list:
-            if check_if_updated(self.conn, self.curr, c[0]) != False:
-                users = get_users(self.curr)
-                message_to_send = generate_update_message(c[0])
+            if check_if_updated(self.conn, self.curr_job, c) != False:
+                users = get_users(self.curr_job)
+                message_to_send = generate_update_message(c)
                 for u in users:
-                    if c[0] == u[1]:
+                    if c == u[1]:
                         self.bot.send_message(chat_id=u[0], text=message_to_send)
 
     def country_subscription(self, user_id, query):
