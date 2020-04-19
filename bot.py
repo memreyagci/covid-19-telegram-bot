@@ -9,7 +9,7 @@ from telegram.ext import CallbackContext, CommandHandler, Updater, CallbackQuery
 import logging
 
 from get_information import *
-from database import create_tables, get_users, get_user_subscriptions, get_country_list, check_if_updated, save_user_subscription, remove_user_subscription, get_country_by_continent
+from database import create_tables, get_users, get_nonsubscribed_countries_by_continent, get_user_subscriptions, get_all_countries, get_country_list, check_if_updated, save_user_subscription, remove_user_subscription, get_country_by_continent
 
 class Bot:
     def __init__(self):
@@ -42,7 +42,7 @@ class Bot:
         self.updater.dispatcher.add_handler(CallbackQueryHandler(self.subscribe, pattern='main'))
 
         check_job = self.updater.job_queue
-        #job_minute = check_job.run_repeating(self.check_updates, interval=180, first=0)
+        job_minute = check_job.run_repeating(self.check_updates, interval=180, first=0)
 
         self.updater.start_polling()
         print("started")
@@ -55,21 +55,14 @@ class Bot:
         github_keyboard = [[InlineKeyboardButton("GitHub", url='https://github.com/memreyagci/covid-19-telegram-bot')]]
         reply_markup = InlineKeyboardMarkup(github_keyboard)
 
-        self.bot.send_message(chat_id=update.effective_chat.id, text='''Welcome to the COVID-19 Statististics Bot!\n
-You can access to the list of countries to subscribe via /subscribe command, and to unsubscribe via /unsubscribe.''')
+        self.bot.send_message(chat_id=update.effective_chat.id, text='''Welcome to the COVID-19 Worldwide Statististics Bot!
+
+You can access to the list of countries to subscribe via /subscribe command, and to unsubscribe via /unsubscribe.\nTo see this message again, use the /start command. Command can also be seen via the / (slash) icon below, left of the attachments.''')
         self.bot.send_message(chat_id=update.effective_chat.id, text='''Here is the GitHub repo of this bot. You can help me out by contributing and creating issues.''', reply_markup=reply_markup)
 
     def subscribe(self, update, context):
         query = update.callback_query
-        all_countries_continents = get_country_list(self.conn, self.curr)
-        user_subscriptions = get_user_subscriptions(self.curr, update.effective_user.id)
-
-        to_subscribe = []
-        subscription_keyboard = []
-
-        for i in all_countries_continents:
-            if i[0] not in user_subscriptions:
-                to_subscribe.append(i)
+        all_countries = get_all_countries(self.curr)
 
         if query == None or query.data == "main":
             continents_keyboard = []
@@ -89,21 +82,21 @@ You can access to the list of countries to subscribe via /subscribe command, and
             except AttributeError:
                 self.bot.edit_message_text(chat_id=query.message.chat_id, message_id=query.message.message_id, text="Please select the continent in which the country you want subscribe to", reply_markup=InlineKeyboardMarkup(continents_keyboard))
 
-            
         elif query.data in self.continents:
             selected_continent_keyboard = []
-            continent_countries = get_country_by_continent(self.curr, query.data)
-            user_subscriptions = get_user_subscriptions(self.curr, update.effective_user.id)
 
-            for i in continent_countries:
-                if i not in user_subscriptions:
+            nonsubscribed_countries = get_nonsubscribed_countries_by_continent(self.curr, update.effective_user.id, query.data)
+
+            for i in range(0, len(nonsubscribed_countries), 3):
                     try:
                         selected_continent_keyboard.append([
-                        InlineKeyboardButton("{} {}".format(i, get_country_flag(i)), callback_data=i)
+                        InlineKeyboardButton("{} {}".format(nonsubscribed_countries[i], get_country_flag(nonsubscribed_countries[i])), callback_data=nonsubscribed_countries[i]),
+                        InlineKeyboardButton("{} {}".format(nonsubscribed_countries[i+1], get_country_flag(nonsubscribed_countries[i+1])), callback_data=nonsubscribed_countries[i+1]),
+                        InlineKeyboardButton("{} {}".format(nonsubscribed_countries[i+2], get_country_flag(nonsubscribed_countries[i+2])), callback_data=nonsubscribed_countries[i+2]),
                                 ])
                     except:
                         selected_continent_keyboard.append([
-                        InlineKeyboardButton("{} {}".format(i, get_country_flag(i)), callback_data=i)
+                        InlineKeyboardButton("{} {}".format(nonsubscribed_countries[i], get_country_flag(nonsubscribed_countries[i])), callback_data=nonsubscribed_countries[i])
                             ])
 
             selected_continent_keyboard.append([
@@ -111,12 +104,11 @@ You can access to the list of countries to subscribe via /subscribe command, and
             ])
             self.bot.edit_message_text(chat_id=query.message.chat_id, message_id=query.message.message_id, text="List of the countries in {}".format(query.data), reply_markup=InlineKeyboardMarkup(selected_continent_keyboard))
 
+        elif query.data in all_countries:
+            self.country_subscription(update.effective_user.id, query.data)
+            self.bot.edit_message_text(chat_id=query.message.chat_id, message_id=query.message.message_id, text="You are successfully subscribed to {}".format(query.data))
         else:
-            for i in all_countries_continents:
-                if query.data == i[0]:
-                    self.country_subscription(update.effective_user.id, query.data)
-                    self.bot.edit_message_text(chat_id=query.message.chat_id, message_id=query.message.message_id, text="You are successfully subscribed to {}".format(query.data))
-                    break
+            self.unsubscribe(update,context)
 
     def unsubscribe(self, update, context):
         query = update.callback_query
@@ -140,6 +132,7 @@ You can access to the list of countries to subscribe via /subscribe command, and
         else:
             for i in subscribed_list:
                 if query.data == '{}_unsubscribe'.format(i):
+                    query.data = query.data.replace("_unsubscribe", "")
                     self.country_unsubscription(update.effective_user.id, query.data)
                     self.bot.edit_message_text(chat_id=query.message.chat_id, message_id=query.message.message_id, text="{} is unsubscribed".format(query.data))
                     break
@@ -164,7 +157,6 @@ You can access to the list of countries to subscribe via /subscribe command, and
         save_user_subscription(self.conn, self.curr, user_id, query)
 
     def country_unsubscription(self, user_id, query):
-        query = query.replace("_unsubscribe", "")
         remove_user_subscription(self.conn, self.curr, user_id, query)
 
 
