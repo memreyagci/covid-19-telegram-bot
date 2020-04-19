@@ -8,7 +8,7 @@
 
 ![Markdown Logo](/botpic.png)
 
-**The bot is still being developed, I don't have a published version that can be used yet. How to try it yourself with your own bot is shown below though. Feel free to contribute & suggest.**
+**Here is the bot: [@COVID19WorldwideStatisticsBot](https://t.me/COVID19WorldwideStatisticsBot)**
 
 A Telegram Bot that sends you a notification when the statistics of a country you subscribed to gets updated.
 
@@ -22,7 +22,7 @@ Statistics are fetched from [Novel COVID API](https://github.com/NovelCOVID/API 
 * Sending update messages
 
 ### **Issues:**
-* Unsubscription doesn't work
+* ~~Unsubscription doesn't work~~ I found a workaround, although it might not be the best way to solve. See [this commit](https://github.com/memreyagci/covid-19-telegram-bot/commit/db96e57037b958c3c827e329679a09bc9711f032 "commit db96e57037b958c3c827e329679a09bc9711f032").
 
 <hr>
 
