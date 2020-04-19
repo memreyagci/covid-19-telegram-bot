@@ -80,7 +80,16 @@ You can access to the list of countries to subscribe via /subscribe command, and
             try:
                 update.message.reply_text("Please select the continent which the country you want subscribe to is in", reply_markup=InlineKeyboardMarkup(continents_keyboard))
             except AttributeError:
-                self.bot.edit_message_text(chat_id=query.message.chat_id, message_id=query.message.message_id, text="Please select the continent in which the country you want subscribe to", reply_markup=InlineKeyboardMarkup(continents_keyboard))
+                self.bot.edit_message_text(chat_id=query.message.chat_id, message_id=query.message.message_id, text="Please select the continent in which the country you want subscribe to is in", reply_markup=InlineKeyboardMarkup(continents_keyboard))
+
+        elif query.data == "Antarctica":
+            selected_continent_keyboard = []
+
+            selected_continent_keyboard.append([
+                InlineKeyboardButton("<< Back to continents menu", callback_data="main")
+                    ])
+
+            self.bot.edit_message_text(chat_id=query.message.chat_id, message_id=query.message.message_id, text="Looks like no man's land.", reply_markup=InlineKeyboardMarkup(selected_continent_keyboard))
 
         elif query.data in self.continents:
             selected_continent_keyboard = []
@@ -101,8 +110,9 @@ You can access to the list of countries to subscribe via /subscribe command, and
 
             selected_continent_keyboard.append([
                 InlineKeyboardButton("<< Back to continents menu", callback_data="main")
-            ])
-            self.bot.edit_message_text(chat_id=query.message.chat_id, message_id=query.message.message_id, text="List of the countries in {}".format(query.data), reply_markup=InlineKeyboardMarkup(selected_continent_keyboard))
+                    ])
+
+            self.bot.edit_message_text(chat_id=query.message.chat_id, message_id=query.message.message_id, text="Here is the list of the countries in {}".format(query.data), reply_markup=InlineKeyboardMarkup(selected_continent_keyboard))
 
         elif query.data in all_countries:
             self.country_subscription(update.effective_user.id, query.data)
@@ -145,7 +155,6 @@ You can access to the list of countries to subscribe via /subscribe command, and
         country_list = get_country_list(self.conn, self.curr)
 
         for c in country_list:
-            print(c[0])
             if check_if_updated(self.conn, self.curr, c[0]) != False:
                 users = get_users(self.curr)
                 message_to_send = generate_update_message(c[0])

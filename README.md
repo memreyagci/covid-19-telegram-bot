@@ -1,12 +1,14 @@
 # COVID-19 Worldwide Statistics Bot for Telegram
 
-> *The Prophet (ﷺ) said, "If you hear of an outbreak of plague in a land, do not enter it; but if the plague breaks out in a place while you are in it, do not leave that place."*<br>
+> *The Prophet (ﷺ) said, "If you hear of an outbreak of plague in a land, do not enter it; but if the plague breaks out in a place while you are in it, do not leave that place."*
 
 *Sahih Al-Bukhari, Book 76 (Book of Medicine), Hadith 43*
 
 <hr>
 
-**The bot is still being developed, I don't have a published version that can be used yet. How to try it yourself with you own bot is shown below though. Feel free to contribute & suggest.**
+![Markdown Logo](/botpic.png)
+
+**The bot is still being developed, I don't have a published version that can be used yet. How to try it yourself with your own bot is shown below though. Feel free to contribute & suggest.**
 
 A Telegram Bot that sends you a notification when the statistics of a country you subscribed to gets updated.
 

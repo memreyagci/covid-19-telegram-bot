@@ -42,11 +42,21 @@ def get_country_list(conn, curr):
 
     return country_list
 
+def get_all_countries(curr):
+    curr.execute("SELECT country_name FROM country")
+
+    all_countries = []
+
+    for i in curr.fetchall():
+        all_countries.append(i[0])
+
+    return all_countries
+
 def check_if_updated(conn, curr, country_name):
     curr.execute("""SELECT json(country_stats)
     FROM country WHERE country_name = ?""", (country_name,))
 
-    req = requests.get("https://corona.lmao.ninja/countries/{}".format(country_name)).json()
+    req = requests.get("https://corona.lmao.ninja/v2/countries/{}".format(country_name)).json()
     new_stats = [req["cases"] , req["deaths"], req["recovered"] , req["active"], req["critical"] , req["tests"]]
 
     try:
@@ -63,7 +73,7 @@ def check_if_updated(conn, curr, country_name):
             return False
 
 def get_users(curr):
-    curr.execute("SELECT * FROM users")
+    curr.execute("SELECT * FROM user")
 
     users_subscriptions = []
 
@@ -99,3 +109,13 @@ def save_user_subscription(conn, curr, telegram_id, subscribed_country):
 def remove_user_subscription(conn, curr, telegram_id, country_to_unsubscribe):
     curr.execute("DELETE FROM user WHERE telegram_id=? and subscribed_country=?", (telegram_id, country_to_unsubscribe,))
     conn.commit()
+
+def get_nonsubscribed_countries_by_continent(curr, telegram_id, country_continent):
+    curr.execute("SELECT country_name FROM country WHERE country_name NOT IN (SELECT subscribed_country FROM user WHERE telegram_id = ?) AND country_continent = ?", (telegram_id, country_continent,))
+
+    nonsubscribed_countries = []
+
+    for i in curr.fetchall():
+        nonsubscribed_countries.append(i[0])
+
+    return nonsubscribed_countries
