@@ -41,6 +41,7 @@ class Bot:
             self.updater.dispatcher.add_handler(CallbackQueryHandler(self.unsubscribe, pattern='{}_unsubscribe'.format(i[0])))
         
         self.updater.dispatcher.add_handler(CallbackQueryHandler(self.subscribe, pattern='main'))
+        self.updater.dispatcher.add_handler(CallbackQueryHandler(self.unsubscribe, pattern='main_unsubscribe'))
 
         check_job = self.updater.job_queue
         job_minute = check_job.run_repeating(self.check_updates, interval=180, first=0)
@@ -122,8 +123,10 @@ You can access to the list of countries to subscribe via /subscribe command, and
             self.bot.edit_message_text(chat_id=query.message.chat_id, message_id=query.message.message_id, text="Here is the list of the countries in {}".format(query.data), reply_markup=InlineKeyboardMarkup(selected_continent_keyboard))
 
         elif query.data in all_countries:
+            subscribed_keyboard = [[InlineKeyboardButton("<< Back to continents menu", callback_data="main")]]
+
             self.country_subscription(update.effective_user.id, query.data)
-            self.bot.edit_message_text(chat_id=query.message.chat_id, message_id=query.message.message_id, text="You are successfully subscribed to {}".format(query.data))
+            self.bot.edit_message_text(chat_id=query.message.chat_id, message_id=query.message.message_id, text="You are successfully subscribed to {}".format(query.data), reply_markup=InlineKeyboardMarkup(subscribed_keyboard))
         else:
             self.unsubscribe(update,context)
 
@@ -132,7 +135,7 @@ You can access to the list of countries to subscribe via /subscribe command, and
         subscribed_list = get_user_subscriptions(self.curr, str(update.effective_user.id))
         unsubscription_keyboard = []
 
-        if query == None:
+        if query == None or query.data == "main_unsubscribe":
             #for i in range(0, len(subscribed_list), 3):
                 # try:
                 #     unsubscription_keyboard.append([
@@ -145,13 +148,22 @@ You can access to the list of countries to subscribe via /subscribe command, and
                     unsubscription_keyboard.append([
                         InlineKeyboardButton('{} {}'.format(i, get_country_flag(i)), callback_data='{}_unsubscribe'.format(i))
                             ])
-            self.bot.send_message(chat_id=update.effective_chat.id, text="Here are the countries you subscribed to.\nClick to unsubscribe.", reply_markup=InlineKeyboardMarkup(unsubscription_keyboard))
+            
+            try:
+                update.message.reply_text("Here are the countries you subscribed to.\nClick to unsubscribe.", reply_markup=InlineKeyboardMarkup(unsubscription_keyboard))
+            except AttributeError:
+                self.bot.edit_message_text(chat_id=query.message.chat_id, message_id=query.message.message_id, text="Here are the countries you subscribed to.\nClick to unsubscribe.", reply_markup=InlineKeyboardMarkup(unsubscription_keyboard))
         else:
+            unsubscribed_keyboard = [[InlineKeyboardButton("<< Back to continents menu", callback_data="main_unsubscribe")]]
+
             for i in subscribed_list:
                 if query.data == '{}_unsubscribe'.format(i):
-                    query.data = query.data.replace("_unsubscribe", "")
-                    self.country_unsubscription(update.effective_user.id, query.data)
-                    self.bot.edit_message_text(chat_id=query.message.chat_id, message_id=query.message.message_id, text="{} is unsubscribed".format(query.data))
+                    qd = query.data.replace("_unsubscribe", "")
+                    self.country_unsubscription(update.effective_user.id, qd)
+                    try:
+                        self.bot.edit_message_text(chat_id=query.message.chat_id, message_id=query.message.message_id, text="{} is unsubscribed".format(qd), reply_markup=InlineKeyboardMarkup(unsubscribed_keyboard))
+                    except:
+                        update.message.reply_text("{} is unsubscribed".format(qd), reply_markup=InlineKeyboardMarkup(unsubscribed_keyboard))
                     break
 
     ''' 
