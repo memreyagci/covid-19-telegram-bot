@@ -109,7 +109,7 @@ You can access to the list of countries to subscribe via /subscribe command, and
                         try:
                             selected_continent_keyboard.append([
                         InlineKeyboardButton("{} {}".format(nonsubscribed_countries[i], get_country_flag(nonsubscribed_countries[i])), callback_data=nonsubscribed_countries[i]),
-                        InlineKeyboardButton("{} {}".format(nonsubscribed_countries[i+1], get_country_flag(nonsubscribed_countries[i])), callback_data=nonsubscribed_countries[i+1])
+                        InlineKeyboardButton("{} {}".format(nonsubscribed_countries[i+1], get_country_flag(nonsubscribed_countries[i+1])), callback_data=nonsubscribed_countries[i+1])
                             ])
                         except:
                             selected_continent_keyboard.append([
