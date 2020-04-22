@@ -4,12 +4,12 @@ import sqlite3
 import pycountry_convert
 
 import telegram
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup
 from telegram.ext import CallbackContext, CommandHandler, Updater, CallbackQueryHandler
 import logging
 
 from get_information import *
 from database import create_tables, check_new_country, get_users, get_nonsubscribed_countries_by_continent, get_user_subscriptions, get_all_countries, check_if_updated, save_user_subscription, remove_user_subscription, get_country_by_continent
+import keyboards_texts
 
 class Bot:
     def __init__(self):
@@ -54,118 +54,53 @@ class Bot:
     '''
 
     def start(self, update, context):
-        github_keyboard = [[InlineKeyboardButton("GitHub", url='https://github.com/memreyagci/covid-19-telegram-bot')]]
-        reply_markup = InlineKeyboardMarkup(github_keyboard)
-
-        self.bot.send_message(chat_id=update.effective_chat.id, text='''Welcome to the COVID-19 Worldwide Statististics Bot!
-
-You can access to the list of countries to subscribe via /subscribe command, and to unsubscribe via /unsubscribe.\nTo see this message again, use the /start command. Command can also be seen via the / (slash) icon below, left of the attachments.''')
-        self.bot.send_message(chat_id=update.effective_chat.id, text='''Here is the GitHub repo of this bot. You can help me out by contributing and creating issues.''', reply_markup=reply_markup)
+        self.bot.send_message(chat_id=update.effective_chat.id, text=keyboards_texts.welcome())
+        self.bot.send_message(chat_id=update.effective_chat.id, text=keyboards_texts.github([0]), reply_markup=keyboards_texts.github[1])
 
     def subscribe(self, update, context):
         query = update.callback_query
+        telegram_id = update.effective_user.id
         all_countries = get_all_countries(self.curr)
-
+        
         if query == None or query.data == "main":
-            continents_keyboard = []
-
-            for i in range(0, 7, 2):
-                try:
-                    continents_keyboard.append([
-                            InlineKeyboardButton(self.continents[i], callback_data=self.continents[i]),
-                            InlineKeyboardButton(self.continents[i+1], callback_data=self.continents[i+1])
-                            ])
-                except IndexError:
-                    continents_keyboard.append([
-                            InlineKeyboardButton(self.continents[i], callback_data=self.continents[i])
-                            ])
+            inputs = keyboards_texts.continents()
             try:
-                update.message.reply_text("Please select the continent which the country you want subscribe to is in", reply_markup=InlineKeyboardMarkup(continents_keyboard))
+                update.message.reply_text(inputs[0], reply_markup=inputs[1])
             except AttributeError:
-                self.bot.edit_message_text(chat_id=query.message.chat_id, message_id=query.message.message_id, text="Please select the continent in which the country you want subscribe to is in", reply_markup=InlineKeyboardMarkup(continents_keyboard))
-
+                self.bot.edit_message_text(chat_id=query.message.chat_id, message_id=query.message.message_id, text=inputs[0], reply_markup=inputs[1])
         elif query.data == "Antarctica":
-            selected_continent_keyboard = []
-
-            selected_continent_keyboard.append([
-                InlineKeyboardButton("<< Back to continents menu", callback_data="main")
-                    ])
-
-            self.bot.edit_message_text(chat_id=query.message.chat_id, message_id=query.message.message_id, text="Looks like no man's land.", reply_markup=InlineKeyboardMarkup(selected_continent_keyboard))
-
+            inputs = keyboards_texts.Antarctica()
+            self.bot.edit_message_text(chat_id=query.message.chat_id, message_id=query.message.message_id, text=inputs[0], reply_markup=inputs[1])
         elif query.data in self.continents:
-            selected_continent_keyboard = []
-
-            nonsubscribed_countries = get_nonsubscribed_countries_by_continent(self.curr, update.effective_user.id, query.data)
-
-            for i in range(0, len(nonsubscribed_countries), 3):
-                    try:
-                        selected_continent_keyboard.append([
-                        InlineKeyboardButton("{} {}".format(nonsubscribed_countries[i], get_country_flag(nonsubscribed_countries[i])), callback_data=nonsubscribed_countries[i]),
-                        InlineKeyboardButton("{} {}".format(nonsubscribed_countries[i+1], get_country_flag(nonsubscribed_countries[i+1])), callback_data=nonsubscribed_countries[i+1]),
-                        InlineKeyboardButton("{} {}".format(nonsubscribed_countries[i+2], get_country_flag(nonsubscribed_countries[i+2])), callback_data=nonsubscribed_countries[i+2])
-                                ])
-                    except:
-                        try:
-                            selected_continent_keyboard.append([
-                        InlineKeyboardButton("{} {}".format(nonsubscribed_countries[i], get_country_flag(nonsubscribed_countries[i])), callback_data=nonsubscribed_countries[i]),
-                        InlineKeyboardButton("{} {}".format(nonsubscribed_countries[i+1], get_country_flag(nonsubscribed_countries[i+1])), callback_data=nonsubscribed_countries[i+1])
-                            ])
-                        except:
-                            selected_continent_keyboard.append([
-                        InlineKeyboardButton("{} {}".format(nonsubscribed_countries[i], get_country_flag(nonsubscribed_countries[i])), callback_data=nonsubscribed_countries[i])
-                            ])
-
-            selected_continent_keyboard.append([
-                InlineKeyboardButton("<< Back to continents menu", callback_data="main")
-                    ])
-
-            self.bot.edit_message_text(chat_id=query.message.chat_id, message_id=query.message.message_id, text="Here is the list of the countries in {}".format(query.data), reply_markup=InlineKeyboardMarkup(selected_continent_keyboard))
-
+            nonsubscribed_countries = get_nonsubscribed_countries_by_continent(self.curr, telegram_id, query.data)
+            inputs = keyboards_texts.countries(query.data, nonsubscribed_countries, telegram_id)
+            self.bot.edit_message_text(chat_id=query.message.chat_id, message_id=query.message.message_id, text=inputs[0], reply_markup=inputs[1])
         elif query.data in all_countries:
-            subscribed_keyboard = [[InlineKeyboardButton("<< Back to continents menu", callback_data="main")]]
-
-            self.country_subscription(update.effective_user.id, query.data)
-            self.bot.edit_message_text(chat_id=query.message.chat_id, message_id=query.message.message_id, text="You are successfully subscribed to {}".format(query.data), reply_markup=InlineKeyboardMarkup(subscribed_keyboard))
+            inputs = keyboards_texts.after_subscription(query.data)
+            self.country_subscription(telegram_id, query.data)
+            self.bot.edit_message_text(chat_id=query.message.chat_id, message_id=query.message.message_id, text=inputs[0], reply_markup=inputs[1])
         else:
             self.unsubscribe(update,context)
 
     def unsubscribe(self, update, context):
         query = update.callback_query
-        subscribed_list = get_user_subscriptions(self.curr, str(update.effective_user.id))
-        unsubscription_keyboard = []
+        subscribed_countries = get_user_subscriptions(self.curr, update.effective_user.id)
 
         if query == None or query.data == "main_unsubscribe":
-            #for i in range(0, len(subscribed_list), 3):
-                # try:
-                #     unsubscription_keyboard.append([
-                #         InlineKeyboardButton('{} {}'.format(subscribed_list[i], get_country_flag(subscribed_list[i])), callback_data='{}_unsubscribe'.format(subscribed_list[i])),
-                #         InlineKeyboardButton('{} {}'.format(subscribed_list[i+1], get_country_flag(subscribed_list[i+1])), callback_data='{}_unsubscribe'.format(subscribed_list[i+1])),
-                #         InlineKeyboardButton('{} {}'.format(subscribed_list[i+2], get_country_flag(subscribed_list[i+2])), callback_data='{}_unsubscribe'.format(subscribed_list[i+2]))
-                #             ])
-                # except:
-            for i in subscribed_list:
-                    unsubscription_keyboard.append([
-                        InlineKeyboardButton('{} {}'.format(i, get_country_flag(i)), callback_data='{}_unsubscribe'.format(i))
-                            ])
-            
+            inputs = keyboards_texts.subscribed_countries(subscribed_countries)
             try:
-                update.message.reply_text("Here are the countries you subscribed to.\nClick to unsubscribe.", reply_markup=InlineKeyboardMarkup(unsubscription_keyboard))
+                update.message.reply_text(inputs[0], reply_markup=inputs[1])
             except AttributeError:
-                self.bot.edit_message_text(chat_id=query.message.chat_id, message_id=query.message.message_id, text="Here are the countries you subscribed to.\nClick to unsubscribe.", reply_markup=InlineKeyboardMarkup(unsubscription_keyboard))
+                self.bot.edit_message_text(chat_id=query.message.chat_id, message_id=query.message.message_id, text=inputs[0], reply_markup=inputs[1])
         else:
-            unsubscribed_keyboard = [[InlineKeyboardButton("<< Back to continents menu", callback_data="main_unsubscribe")]]
-
-            for i in subscribed_list:
-                if query.data == '{}_unsubscribe'.format(i):
-                    qd = query.data.replace("_unsubscribe", "")
-                    self.country_unsubscription(update.effective_user.id, qd)
-                    try:
-                        self.bot.edit_message_text(chat_id=query.message.chat_id, message_id=query.message.message_id, text="{} is unsubscribed".format(qd), reply_markup=InlineKeyboardMarkup(unsubscribed_keyboard))
-                    except:
-                        update.message.reply_text("{} is unsubscribed".format(qd), reply_markup=InlineKeyboardMarkup(unsubscribed_keyboard))
-                    break
-
+            unsubscribed_country = query.data.replace("_unsubscribe", "")
+            self.country_unsubscription(update.effective_user.id, unsubscribed_country)
+            inputs = keyboards_texts.after_unsubscription(unsubscribed_country)
+            try:
+                self.bot.edit_message_text(chat_id=query.message.chat_id, message_id=query.message.message_id, text=inputs[0], reply_markup=inputs[1])
+            except:
+                update.message.reply_text(inputs[0], reply_markup=inputs[1])
+                
     ''' 
     END OF COMMAND METHODS.
     '''
@@ -187,7 +122,6 @@ You can access to the list of countries to subscribe via /subscribe command, and
 
     def country_unsubscription(self, user_id, query):
         remove_user_subscription(self.conn, self.curr, user_id, query)
-
 
 if __name__ == '__main__':
     bot = Bot()
