@@ -1,21 +1,12 @@
 import requests
-import datetime
 import pycountry_convert
 
 def generate_update_message(country_name):
     new_stats = requests.get("https://corona.lmao.ninja/v2/countries/{}".format(country_name)).json()
-    #message1 = "New update for {}  {} in {} {}, {} {}:{}\n".format(
     message1 = "New update for {}  {}\n".format(
         new_stats["country"],
-        get_country_flag(country_name),
-        # get_country_flag(country_name),
-        # update_time.strftime("%B"),
-        # update_time.strftime("%d"),
-        # update_time.strftime("%Y"),
-        # update_time.strftime("%H"),
-        # update_time.strftime("%M")
+        get_country_flag(country_name)
             )
-
     message2 = """ 
         Total cases: {}
         Today: {}
@@ -42,7 +33,6 @@ def generate_update_message(country_name):
             new_stats["testsPerOneMillion"],
             new_stats["recovered"],
             new_stats["active"],
-            new_stats["tests"],
             new_stats["critical"]
         )
         

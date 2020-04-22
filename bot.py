@@ -1,14 +1,13 @@
 import os
 import sqlite3
 
-import pycountry_convert
-
 import telegram
+from telegram import ParseMode
 from telegram.ext import CallbackContext, CommandHandler, Updater, CallbackQueryHandler
 import logging
 
-from get_information import *
-from database import create_tables, check_new_country, get_users, get_nonsubscribed_countries_by_continent, get_user_subscriptions, get_all_countries, check_if_updated, save_user_subscription, remove_user_subscription, get_country_by_continent
+from get_information import generate_update_message, get_country_flag
+from database import create_tables, check_new_country, get_users, get_user_ids, get_nonsubscribed_countries_by_continent, get_user_subscriptions, get_all_countries, check_if_updated, save_user_subscription, remove_user_subscription
 import keyboards_texts
 
 class Bot:
@@ -43,11 +42,15 @@ class Bot:
         self.updater.dispatcher.add_handler(CallbackQueryHandler(self.subscribe, pattern='main'))
         self.updater.dispatcher.add_handler(CallbackQueryHandler(self.unsubscribe, pattern='main_unsubscribe'))
 
+        self.updater.start_polling()
+
+        print("started")
+
+        update_job = self.updater.job_queue
+        job_once = update_job.run_once(self.send_new_update_message, when=0)
+
         check_job = self.updater.job_queue
         job_minute = check_job.run_repeating(self.check_updates, interval=180, first=0)
-
-        self.updater.start_polling()
-        print("started")
 
     '''
     Methods of the commands (which are /start, /subscribe, and /unsubscribe so far.)
@@ -110,7 +113,7 @@ class Bot:
         country_list = get_all_countries(self.curr_job)
 
         for c in country_list:
-            if check_if_updated(self.conn, self.curr_job, c) != False:
+            if check_if_updated(self.conn, self.curr_job, c) == True:
                 users = get_users(self.curr_job)
                 message_to_send = generate_update_message(c)
                 for u in users:
@@ -122,6 +125,17 @@ class Bot:
 
     def country_unsubscription(self, user_id, query):
         remove_user_subscription(self.conn, self.curr, user_id, query)
+
+    def send_new_update_message(self, context: telegram.ext.CallbackContext):
+        new_update_message = open("update_message.txt", "r+")
+        message_content = new_update_message.read()
+
+        if message_content != '':
+            users = get_user_ids(self.curr)
+            for u in users:
+                self.bot.send_message(chat_id=u, text=message_content, parse_mode=ParseMode.HTML)
+            new_update_message.truncate(0)
+        new_update_message.close()
 
 if __name__ == '__main__':
     bot = Bot()
