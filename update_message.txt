@@ -1,5 +1,0 @@
-<b>What's new?:</b>
-
-    - <i>"What's new?"</i> functionality added. User-related updates will be announced here. (Don't worry. There will be an option to turn it off with the next update.)
-
-    - The issue of <i>"critical"</i> giving the same number as <i>"tests"</i> is fixed. Thanks u/rfspd for pointing it out. 

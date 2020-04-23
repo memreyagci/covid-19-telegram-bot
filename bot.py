@@ -7,7 +7,7 @@ from telegram.ext import CallbackContext, CommandHandler, Updater, CallbackQuery
 import logging
 
 from get_information import generate_update_message, get_country_flag
-from database import create_tables, check_new_country, get_users, get_user_ids, get_nonsubscribed_countries_by_continent, get_user_subscriptions, get_all_countries, check_if_updated, save_user_subscription, remove_user_subscription
+from database import create_tables, check_new_country, get_users, get_user_ids, get_nonsubscribed_countries_by_continent, get_user_subscriptions, get_all_countries, check_if_updated, save_user_subscription, remove_user_subscription, delete_user
 import keyboards_texts
 
 class Bot:
@@ -57,8 +57,8 @@ class Bot:
     '''
 
     def start(self, update, context):
-        self.bot.send_message(chat_id=update.effective_chat.id, text=keyboards_texts.welcome())
-        self.bot.send_message(chat_id=update.effective_chat.id, text=keyboards_texts.github([0]), reply_markup=keyboards_texts.github[1])
+        self.bot.send_message(chat_id=update.effective_chat.id, text=keyboards_texts.welcome_text())
+        self.bot.send_message(chat_id=update.effective_chat.id, text=keyboards_texts.github()[0], reply_markup=keyboards_texts.github()[1])
 
     def subscribe(self, update, context):
         query = update.callback_query
@@ -118,7 +118,10 @@ class Bot:
                 message_to_send = generate_update_message(c)
                 for u in users:
                     if c == u[1]:
-                        self.bot.send_message(chat_id=u[0], text=message_to_send)
+                        try:
+                            self.bot.send_message(chat_id=u[0], text=message_to_send)
+                        except telegram.error.Unauthorized:
+                            delete_user(self.conn, self.curr, u[0])
 
     def country_subscription(self, user_id, query):
         save_user_subscription(self.conn, self.curr, user_id, query)

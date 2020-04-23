@@ -124,3 +124,7 @@ def get_nonsubscribed_countries_by_continent(curr, telegram_id, country_continen
         nonsubscribed_countries.append(i[0])
 
     return nonsubscribed_countries
+
+def delete_user(conn, curr, telegram_id):
+    curr.execute("DELETE FROM user WHERE telegram_id=?", (telegram_id,))
+    conn.commit()
