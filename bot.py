@@ -1,5 +1,5 @@
 import os
-import sqlite3
+from sqlalchemy import create_engine
 
 import telegram
 from telegram import ParseMode
@@ -7,7 +7,8 @@ from telegram.ext import CallbackContext, CommandHandler, Updater, CallbackQuery
 import logging
 
 from get_information import generate_update_message, get_country_flag
-from database import create_tables, check_new_country, get_users, get_user_ids, get_nonsubscribed_countries_by_continent, get_user_subscriptions, get_all_countries, check_if_updated, save_user_subscription, remove_user_subscription, delete_user
+#from database import create_connection, create_tables, check_new_country, get_users, get_user_ids, get_nonsubscribed_countries_by_continent, get_user_subscriptions, database.get_all_countries, check_if_updated, save_user_subscription, remove_user_subscription, delete_user
+from database import Database
 import keyboards_texts
 
 class Bot:
@@ -17,10 +18,8 @@ class Bot:
         logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                      level=logging.INFO)
 
-        self.conn = sqlite3.connect(r'covid19.db', isolation_level=None, check_same_thread=False)
-        self.curr = self.conn.cursor()
-        self.curr_job = self.conn.cursor()
-        create_tables(self.curr)
+        self.database = Database()
+        self.conn = self.database.get_connection()
 
         self.bot = telegram.Bot(token=api)
         self.updater = Updater(token=api, use_context=True)
@@ -35,7 +34,7 @@ class Bot:
         for i in self.continents:
             self.updater.dispatcher.add_handler(CallbackQueryHandler(self.subscribe, pattern=i))
 
-        for i in check_new_country(self.conn, self.curr):
+        for i in self.database.check_new_country(self.conn):
             self.updater.dispatcher.add_handler(CallbackQueryHandler(self.subscribe, pattern=i[0]))
             self.updater.dispatcher.add_handler(CallbackQueryHandler(self.unsubscribe, pattern='{}_unsubscribe'.format(i[0])))
         
@@ -63,7 +62,7 @@ class Bot:
     def subscribe(self, update, context):
         query = update.callback_query
         telegram_id = update.effective_user.id
-        all_countries = get_all_countries(self.curr)
+        all_countries = self.database.get_all_countries(self.conn)
         
         if query == None or query.data == "main":
             inputs = keyboards_texts.continents()
@@ -75,7 +74,7 @@ class Bot:
             inputs = keyboards_texts.Antarctica()
             self.bot.edit_message_text(chat_id=query.message.chat_id, message_id=query.message.message_id, text=inputs[0], reply_markup=inputs[1])
         elif query.data in self.continents:
-            nonsubscribed_countries = get_nonsubscribed_countries_by_continent(self.curr, telegram_id, query.data)
+            nonsubscribed_countries = self.database.get_nonsubscribed_countries_by_continent(self.conn, telegram_id, query.data)
             inputs = keyboards_texts.countries(query.data, nonsubscribed_countries, telegram_id)
             self.bot.edit_message_text(chat_id=query.message.chat_id, message_id=query.message.message_id, text=inputs[0], reply_markup=inputs[1])
         elif query.data in all_countries:
@@ -87,7 +86,7 @@ class Bot:
 
     def unsubscribe(self, update, context):
         query = update.callback_query
-        subscribed_countries = get_user_subscriptions(self.curr, update.effective_user.id)
+        subscribed_countries = self.database.get_user_subscriptions(self.conn, update.effective_user.id)
 
         if query == None or query.data == "main_unsubscribe":
             inputs = keyboards_texts.subscribed_countries(subscribed_countries)
@@ -109,32 +108,32 @@ class Bot:
     '''
 
     def check_updates(self, context: telegram.ext.CallbackContext):
-        check_new_country(self.conn, self.curr_job)
-        country_list = get_all_countries(self.curr_job)
+        self.database.check_new_country(self.conn)
+        country_list = self.database.get_all_countries(self.conn)
 
         for c in country_list:
-            if check_if_updated(self.conn, self.curr_job, c) == True:
-                users = get_users(self.curr_job)
+            if self.database.check_if_updated(self.conn, c) == True:
+                users = self.database.get_users(self.conn)
                 message_to_send = generate_update_message(c)
                 for u in users:
                     if c == u[1]:
                         try:
                             self.bot.send_message(chat_id=u[0], text=message_to_send)
                         except telegram.error.Unauthorized:
-                            delete_user(self.conn, self.curr, u[0])
+                            self.database.delete_user(self.conn, u[0])
 
     def country_subscription(self, user_id, query):
-        save_user_subscription(self.conn, self.curr, user_id, query)
+        self.database.save_user_subscription(self.conn, user_id, query)
 
     def country_unsubscription(self, user_id, query):
-        remove_user_subscription(self.conn, self.curr, user_id, query)
+        self.database.remove_user_subscription(self.conn, user_id, query)
 
     def send_new_update_message(self, context: telegram.ext.CallbackContext):
         new_update_message = open("update_message.txt", "r+")
         message_content = new_update_message.read()
 
         if message_content != '':
-            users = get_user_ids(self.curr)
+            users = self.database.get_user_ids(self.conn)
             for u in users:
                 self.bot.send_message(chat_id=u, text=message_content, parse_mode=ParseMode.HTML)
             new_update_message.truncate(0)
