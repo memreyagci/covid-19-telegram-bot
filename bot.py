@@ -7,7 +7,6 @@ from telegram.ext import CallbackContext, CommandHandler, Updater, CallbackQuery
 import logging
 
 from get_information import generate_update_message, get_country_flag
-#from database import create_connection, create_tables, check_new_country, get_users, get_user_ids, get_nonsubscribed_countries_by_continent, get_user_subscriptions, database.get_all_countries, check_if_updated, save_user_subscription, remove_user_subscription, delete_user
 from database import Database
 import keyboards_texts
 

@@ -149,11 +149,6 @@ class Database:
                 )
                     )
 
-        print(select([self.user.c.subscribed_country]).where(
-                        self.user.c.telegram_id == telegram_id)
-                        )
-
-
         nonsubscribed_countries = []
 
         for i in conn.execute(statement2).fetchall():
