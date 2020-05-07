@@ -6,8 +6,6 @@ import database_config as conf
 from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String, JSON, and_
 from sqlalchemy.sql import select, insert, update, delete
 
-
-
 class Database:
     def __init__(self):
         engine = create_engine('mysql+pymysql://{}:{}@{}/{}'.format(conf.mysql["user"], conf.mysql["passwd"], conf.mysql["host"], conf.mysql["db"]))

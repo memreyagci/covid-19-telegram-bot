@@ -40,13 +40,13 @@ Install the requirements:
 pip install -r requirements.txt
 ```
 
-Configure your database by providing the necessary inputs to database_config.py file:
+Create a file named 'database_config.py' in root directory of the repository and provide the necessary inputs:
 ```python
 mysql = {
-    "host": "",
-    "user": "",
-    "passwd": "",
-    "db": "",
+    "host": #host,
+    "user": #user,
+    "passwd": #passwd,
+    "db": #db,
 }
 ```
 
