@@ -40,6 +40,16 @@ Install the requirements:
 pip install -r requirements.txt
 ```
 
+Configure your database by providing the necessary inputs to database_config.py file:
+```python
+mysql = {
+    "host": "",
+    "user": "",
+    "passwd": "",
+    "db": "",
+}
+```
+
 Set your bot's api as an environmental variable:
 
 ```bash

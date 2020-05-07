@@ -16,6 +16,7 @@ py==1.8.1
 pycountry==19.8.18
 pycountry-convert==0.7.2
 pycparser==2.20
+PyMySQL==0.9.3
 pyparsing==2.4.7
 pytest==5.4.1
 pytest-cov==2.8.1

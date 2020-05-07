@@ -1,12 +1,16 @@
 import requests
 import pycountry_convert
 import json
+import pymysql
+import database_config as conf
 from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String, JSON, and_
 from sqlalchemy.sql import select, insert, update, delete
 
+
+
 class Database:
     def __init__(self):
-        engine = create_engine('sqlite:///covid19.db?check_same_thread=False')
+        engine = create_engine('mysql+pymysql://{}:{}@{}/{}'.format(conf.mysql["user"], conf.mysql["passwd"], conf.mysql["host"], conf.mysql["db"]))
         self.create_tables(engine)
         self.conn = engine.connect()
 
@@ -19,12 +23,12 @@ class Database:
         self.user = Table(
             'user', meta,
             Column('telegram_id', Integer),
-            Column('subscribed_country', String),
+            Column('subscribed_country', String(32)),
         )
         self.country = Table(
             'country', meta,
-            Column('country_name', String),
-            Column('country_continent', String, unique=True),
+            Column('country_name', String(32), unique=True),
+            Column('country_continent', String(32)),
             Column('country_stats', JSON),
         )
         meta.create_all(engine)
@@ -86,7 +90,7 @@ class Database:
                 if countries_api[i]["country"] not in countries:
                     try:
                         continent = pycountry_convert.convert_continent_code_to_continent_name(pycountry_convert.country_alpha2_to_continent_code(countries_api[i]["countryInfo"]["iso2"]))
-                        statement = self.country.insert().values(country_name=countries_api[i]["country"], country_continent=continent).prefix_with('OR IGNORE')
+                        statement = self.country.insert().values(country_name=countries_api[i]["country"], country_continent=continent).prefix_with('IGNORE')
                         conn.execute(statement)
                     except:
                         pass
@@ -127,19 +131,6 @@ class Database:
     def get_nonsubscribed_countries_by_continent(self, conn, telegram_id, country_continent):
         to_exclude = select([self.user.c.subscribed_country]).where(
                     self.user.c.telegram_id == telegram_id)
-        # notin = []
-
-        # for i in conn.execute(statement1).fetchall():
-        #     notin.append(list(i)[0])
-        # notin.append("Turkey")
-        # print(notin)
-
-        # statement2 = select([self.country.c.country_name]).where(
-        #     and_(
-        #         self.country.c.country_name.notin_(notin), 
-        #         self.country.c.country_continent == country_continent
-        #         )
-        #             )
 
         statement2 = select([self.country.c.country_name]).where(
             and_(

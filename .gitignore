@@ -10,4 +10,5 @@
 !database.py
 !get_information.py
 !keyboards_texts.py
+!database_config.py
 !update_message.txt
