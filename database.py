@@ -146,5 +146,5 @@ class Database:
         return nonsubscribed_countries
 
     def delete_user(self, conn, telegram_id):
-        statement = user.delete().where(user.c.telegram_id == telegram_id)
+        statement = self.user.delete().where(user.c.telegram_id == telegram_id)
         conn.execute(statement)

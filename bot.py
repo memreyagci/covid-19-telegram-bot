@@ -55,8 +55,12 @@ class Bot:
     '''
 
     def start(self, update, context):
-        self.bot.send_message(chat_id=update.effective_chat.id, text=keyboards_texts.welcome_text())
-        self.bot.send_message(chat_id=update.effective_chat.id, text=keyboards_texts.github()[0], reply_markup=keyboards_texts.github()[1])
+        try:
+            self.bot.send_message(chat_id=update.effective_chat.id, text=keyboards_texts.welcome_text())
+            self.bot.send_message(chat_id=update.effective_chat.id, text=keyboards_texts.github()[0], reply_markup=keyboards_texts.github()[1])
+        except telegram.error.Unauthorized:
+            self.database.delete_user(self.conn, update.effective_chat.id)
+
 
     def subscribe(self, update, context):
         query = update.callback_query
