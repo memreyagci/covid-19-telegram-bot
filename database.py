@@ -101,14 +101,14 @@ class Database:
                     return False
 
     def save_subscription(self, tid, subscription):
-        self.cursor.execute("INSERT INTO user (tid, subcription)" \
+        self.cursor.execute("INSERT INTO user (tid, subscription)" \
                             "VALUES (%s, %s)", (tid, subscription))
 
     def remove_subscription(self, tid, subscription):
         self.cursor.execute("DELETE FROM user WHERE tid = %s AND subscription = %s",
                             (tid, subscription))
 
-    def get_nonsubscribed_countries_by_continent(self, tid, continent):
+    def get_nonsubscribed_by_continent(self, tid, continent):
         nonsubscribed = []
 
         try:
