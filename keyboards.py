@@ -1,26 +1,38 @@
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, KeyboardButton
 from get_information import get_country_flag
 
-def countries(continent, nonsubscribed_countries, telegram_id):
+def nonsubscribed_by_continent(continent, nonsubscribed):
     selected_continent_keyboard = []
 
-    for i in range(0, len(nonsubscribed_countries), 3):
+    for i in range(0, len(nonsubscribed), 3):
+        try:
+            selected_continent_keyboard.append([
+            InlineKeyboardButton("{} {}".format(nonsubscribed[i],
+                                                get_country_flag(nonsubscribed[i])),
+                                                callback_data=nonsubscribed[i]),
+            InlineKeyboardButton("{} {}".format(nonsubscribed[i+1],
+                                                get_country_flag(nonsubscribed[i+1])),
+                                                callback_data=nonsubscribed[i+1]),
+            InlineKeyboardButton("{} {}".format(nonsubscribed[i+2],
+                                                get_country_flag(nonsubscribed[i+2])),
+                                                callback_data=nonsubscribed[i+2])
+                    ])
+        except:
             try:
                 selected_continent_keyboard.append([
-                InlineKeyboardButton("{} {}".format(nonsubscribed_countries[i], get_country_flag(nonsubscribed_countries[i])), callback_data=nonsubscribed_countries[i]),
-                InlineKeyboardButton("{} {}".format(nonsubscribed_countries[i+1], get_country_flag(nonsubscribed_countries[i+1])), callback_data=nonsubscribed_countries[i+1]),
-                InlineKeyboardButton("{} {}".format(nonsubscribed_countries[i+2], get_country_flag(nonsubscribed_countries[i+2])), callback_data=nonsubscribed_countries[i+2])
-                        ])
+            InlineKeyboardButton("{} {}".format(nonsubscribed[i],
+                                                get_country_flag(nonsubscribed[i])),
+                                                callback_data=nonsubscribed[i]),
+            InlineKeyboardButton("{} {}".format(nonsubscribed[i+1],
+                                                get_country_flag(nonsubscribed[i+1])),
+                                                callback_data=nonsubscribed[i+1])
+                ])
             except:
-                try:
-                    selected_continent_keyboard.append([
-                InlineKeyboardButton("{} {}".format(nonsubscribed_countries[i], get_country_flag(nonsubscribed_countries[i])), callback_data=nonsubscribed_countries[i]),
-                InlineKeyboardButton("{} {}".format(nonsubscribed_countries[i+1], get_country_flag(nonsubscribed_countries[i+1])), callback_data=nonsubscribed_countries[i+1])
-                    ])
-                except:
-                    selected_continent_keyboard.append([
-                InlineKeyboardButton("{} {}".format(nonsubscribed_countries[i], get_country_flag(nonsubscribed_countries[i])), callback_data=nonsubscribed_countries[i])
-                    ])
+                selected_continent_keyboard.append([
+            InlineKeyboardButton("{} {}".format(nonsubscribed[i],
+                                                get_country_flag(nonsubscribed[i])),
+                                                callback_data=nonsubscribed[i])
+                ])
 
     selected_continent_keyboard.append([
         InlineKeyboardButton("<< Back to continents menu", callback_data="main")
@@ -53,40 +65,42 @@ def continents():
 
 def Antarctica():
     selected_continent_keyboard= [
-        InlineKeyboardButton("<< Back to continents menu", callback_data="main")
+       [ InlineKeyboardButton("<< Back to continents menu", callback_data="main") ]
             ]
 
     return "Looks like no man's land.", InlineKeyboardMarkup(selected_continent_keyboard)
 
 
 def after_subscription(country):
-    subscribed_keyboard = [[InlineKeyboardButton("<< Back to continents menu", callback_data="main")]]
-    
+    subscribed_keyboard = [
+            [InlineKeyboardButton("<< Back to continents menu", callback_data="main")]
+            ]
+
     return "You are successfully subscribed to {}".format(country), InlineKeyboardMarkup(subscribed_keyboard)
 
 
 def after_unsubscription(country):
-    unsubscribed_keyboard = [[InlineKeyboardButton("<< Back to unsubscription menu", callback_data="main_unsubscribe")]]
+    unsubscribed_keyboard = [
+            [InlineKeyboardButton("<< Back to unsubscription menu", callback_data="main_unsubscribe")]
+            ]
 
     return "{} is unsubscribed".format(country), InlineKeyboardMarkup(unsubscribed_keyboard)
 
-
-def welcome_text():
-    return "Welcome to the COVID-19 Worldwide Statististics Bot!\nYou can access to the list of countries to subscribe via /subscribe command, and to unsubscribe via /unsubscribe.\nTo see this message again, use the /start command. Command can also be seen via the / (slash) icon below, left of the attachments."
-
-
 def github():
-    github_keyboard = [[InlineKeyboardButton("GitHub", url='https://github.com/memreyagci/covid-19-telegram-bot')]]
+    github_keyboard = [
+            [InlineKeyboardButton("GitHub", url='https://github.com/memreyagci/covid-19-telegram-bot')]
+            ]
 
     return "Here is the GitHub repo of this bot. You can help me out by contributing and creating issues.", InlineKeyboardMarkup(github_keyboard)
 
 
-def subscribed_countries(subscribed_countries):
+def subscribed(subscriptions):
     unsubscription_keyboard = []
 
-    for i in subscribed_countries:
+    for i in subscriptions:
         unsubscription_keyboard.append([
-            InlineKeyboardButton('{} {}'.format(i, get_country_flag(i)), callback_data='{}_unsubscribe'.format(i))
+            InlineKeyboardButton('{} {}'
+                .format(i, get_country_flag(i)), callback_data='{}_unsubscribe'.format(i))
                 ])
 
     return "Here are the countries you subscribed to.\nClick to unsubscribe.", InlineKeyboardMarkup(unsubscription_keyboard)
