@@ -20,7 +20,7 @@ class Bot:
         self.database = Database()
         self.countries = self.database.get_all("name", "country")
 
-        bot = telegram.Bot(token=API)
+        #bot = telegram.Bot(token=API)
         updater = Updater(token=API)
         dispatcher = updater.dispatcher
 
@@ -80,7 +80,7 @@ class Bot:
                 self.antarctica_menu(context, query, callback_to)
             elif query_data in CONTINENTS:
                 nonsubscribed = self.database.get_nonsubscribed_by_continent(tid, query_data)
-                self.countries_menu(update, context, query, query_data, nonsubscribed, callback_to)
+                self.countries_menu(context, query, query_data, nonsubscribed, callback_to)
             elif query_data in self.countries:
                 inputs = keyboards.after_subscription(query_data)
                 self.database.save_subscription(tid, query_data)
@@ -119,7 +119,6 @@ class Bot:
 
     def get(self, update, context):
         query = update.callback_query
-        tid = update.effective_user.id
         callback_to = "get"
 
         if query is None:
@@ -133,7 +132,7 @@ class Bot:
                 self.antarctica_menu(context, query, callback_to)
             elif query_data in CONTINENTS:
                 countries_by_continent = self.database.get_where("name", "country", "continent", query_data)
-                self.countries_menu(update, context, query, query_data, countries_by_continent, callback_to)
+                self.countries_menu(context, query, query_data, countries_by_continent, callback_to)
             elif query_data in self.countries:
                 inputs = keyboards.select_data(query_data)
                 context.bot.edit_message_text(chat_id=query.message.chat_id,
@@ -158,7 +157,7 @@ class Bot:
                                         reply_markup=inputs[1])
 
 
-    def countries_menu(self, update, context, query, continent, countries, callback_to):
+    def countries_menu(self, context, query, continent, countries, callback_to):
         inputs = keyboards.by_continent(continent, countries, callback_to)
         context.bot.edit_message_text(chat_id=query.message.chat_id,
                                         message_id=query.message.message_id,
