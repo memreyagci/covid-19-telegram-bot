@@ -1,17 +1,21 @@
 import requests
 import pycountry_convert
 
-OFFSET = 127462 - ord('A')
+OFFSET = 127462 - ord("A")
+
 
 def check_updates(country, old_cases, old_deaths, old_recovered, old_tests):
-    new_cases, today_cases, new_deaths, today_deaths, new_recovered, today_recovered, new_tests = get_new(country)
+    (
+        new_cases,
+        today_cases,
+        new_deaths,
+        today_deaths,
+        new_recovered,
+        today_recovered,
+        new_tests,
+    ) = get_new(country)
 
-    updates = {
-            "cases": [],
-            "deaths": [],
-            "recovered": [],
-            "tests": []
-            }
+    updates = {"cases": [], "deaths": [], "recovered": [], "tests": []}
 
     changed = 1
 
@@ -40,6 +44,7 @@ def check_updates(country, old_cases, old_deaths, old_recovered, old_tests):
 
     return updates
 
+
 def generate_update_message(country, updates):
     message = f"New update for {country}  {get_country_flag(country)}\n"
 
@@ -65,6 +70,7 @@ def generate_update_message(country, updates):
 
     return message
 
+
 def get_new(country):
     req = requests.get(f"https://corona.lmao.ninja/v2/countries/{country}").json()
 
@@ -76,17 +82,29 @@ def get_new(country):
     today_recovered = req["todayRecovered"]
     new_tests = req["tests"]
 
-    return new_cases, today_cases, new_deaths, today_deaths, new_recovered, today_recovered, new_tests
+    return (
+        new_cases,
+        today_cases,
+        new_deaths,
+        today_deaths,
+        new_recovered,
+        today_recovered,
+        new_tests,
+    )
+
 
 def get_data(country, data):
     req = requests.get(f"https://corona.lmao.ninja/v2/countries/{country}").json()
 
     return req[data]
 
+
 def get_country_flag(country):
     try:
         code = pycountry_convert.country_name_to_country_alpha2(country)
     except:
-        code = requests.get(f"https://corona.lmao.ninja/v2/countries/{country}").json()["countryInfo"]["iso2"]
+        code = requests.get(f"https://corona.lmao.ninja/v2/countries/{country}").json()[
+            "countryInfo"
+        ]["iso2"]
 
     return chr(ord(code[0]) + OFFSET) + chr(ord(code[1]) + OFFSET)
