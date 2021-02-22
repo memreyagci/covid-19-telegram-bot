@@ -1,6 +1,4 @@
-from time import sleep
 import json
-from json import JSONDecodeError
 import requests
 import pycountry_convert
 import mysql.connector

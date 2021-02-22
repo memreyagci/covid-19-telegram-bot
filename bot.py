@@ -2,10 +2,7 @@ import logging
 import os
 
 import telegram
-from telegram import ParseMode, Update
-from telegram.ext import (CallbackContext, CallbackQueryHandler,
-                          CommandHandler, ConversationHandler, Filters,
-                          MessageHandler, Updater)
+from telegram.ext import CallbackQueryHandler, CommandHandler, Updater
 
 import keyboards
 import jobs
@@ -66,6 +63,43 @@ class Bot:
                                     reply_markup=keyboards.github()[1])
         except telegram.error.Unauthorized:
             self.database.delete_user(update.effective_chat.id)
+
+#    def subscribe(self, update, context):
+#        query = update.callback_query
+#        tid = update.effective_user.id
+#
+#        if query is None or query.data == "subscribe_main":
+#            self.continents_menu(update, context, query, "subscribe")
+##            inputs = keyboards.continents()
+##            try:
+##                update.message.reply_text(inputs[0], reply_markup=inputs[1])
+##            except AttributeError:
+##                context.bot.edit_message_text(chat_id=query.message.chat_id,
+##                                            message_id=query.message.message_id,
+##                                            text=inputs[0],
+##                                            reply_markup=inputs[1])
+#        elif query.data == "subscribe_Antarctica":
+#            inputs = keyboards.Antarctica("subscribe")
+#            context.bot.edit_message_text(chat_id=query.message.chat_id,
+#                                        message_id=query.message.message_id,
+#                                        text=inputs[0],
+#                                        reply_markup=inputs[1])
+#        elif query.data.split("_")[1] in CONTINENTS:
+#            nonsubscribed = self.database.get_nonsubscribed_by_continent(tid, query.data)
+#            inputs = keyboards.by_continent(query.data, nonsubscribed, "subscribe")
+#            context.bot.edit_message_text(chat_id=query.message.chat_id,
+#                                        message_id=query.message.message_id,
+#                                        text=inputs[0],
+#                                        reply_markup=inputs[1])
+#        elif "subscribe_" in query.data:
+#            inputs = keyboards.after_subscription(query.data)
+#            self.database.save_subscription(tid, query.data)
+#            context.bot.edit_message_text(chat_id=query.message.chat_id,
+#                                        message_id=query.message.message_id,
+#                                        text=inputs[0],
+#                                        reply_markup=inputs[1])
+##        else:
+##            self.unsubscribe(update,context)
 
     def subscribe(self, update, context):
         query = update.callback_query
@@ -147,6 +181,12 @@ class Bot:
                 country = query.data.split("_")[0]
                 data = query.data.split("_")[1]
                 amount = jobs.get_data(country, data)
+#                context.bot.send_message(chat_id=update.effective_chat.id,
+#                                            text="""
+#                                            Number of {} in {} is {}
+#                                            """.format(data,
+#                                                country,
+#                                                amount))
                 context.bot.edit_message_text(chat_id=query.message.chat_id,
                                             message_id=query.message.message_id,
                                             text="""
