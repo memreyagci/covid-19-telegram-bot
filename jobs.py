@@ -94,6 +94,11 @@ def get_new(country):
 
     return new_cases, today_cases, new_deaths, today_deaths, new_recovered, today_recovered, new_tests
 
+def get_data(country, data):
+    req = requests.get("https://corona.lmao.ninja/v2/countries/{}".format(country)).json()
+
+    return req[data]
+
 def get_country_flag(country):
     try:
         code = pycountry_convert.country_name_to_country_alpha2(country)

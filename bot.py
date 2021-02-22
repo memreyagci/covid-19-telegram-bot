@@ -21,6 +21,7 @@ class Bot:
                      level=logging.INFO)
 
         self.database = Database()
+        self.countries = self.database.get_all("name", "country")
 
         bot = telegram.Bot(token=API)
         updater = Updater(token=API)
@@ -29,18 +30,27 @@ class Bot:
         dispatcher.add_handler(CommandHandler('start', self.start))
         dispatcher.add_handler(CommandHandler('subscribe', self.subscribe))
         dispatcher.add_handler(CommandHandler('unsubscribe', self.unsubscribe))
+        dispatcher.add_handler(CommandHandler('get', self.get))
 
         for continent in CONTINENTS:
-            dispatcher.add_handler(CallbackQueryHandler(self.subscribe, pattern=continent))
+            dispatcher.add_handler(CallbackQueryHandler(self.subscribe, pattern="subscribe_{}".format(continent)))
+            dispatcher.add_handler(CallbackQueryHandler(self.get, pattern="get_{}".format(continent)))
 
-        for i in self.database.get_all("name", "country"):
-            dispatcher.add_handler(CallbackQueryHandler(self.subscribe, pattern=i[0]))
-            dispatcher.add_handler(CallbackQueryHandler(self.unsubscribe, pattern='{}_unsubscribe'.format(i[0])))
+        for country in self.countries:
+            dispatcher.add_handler(CallbackQueryHandler(self.subscribe, pattern='subscribe_{}'.format(country)))
+            dispatcher.add_handler(CallbackQueryHandler(self.unsubscribe, pattern='unsubscribe_{}'.format(country)))
+            dispatcher.add_handler(CallbackQueryHandler(self.get, pattern='get_{}'.format(country)))
+            dispatcher.add_handler(CallbackQueryHandler(self.get, pattern='{}_{}'.format(country, "cases")))
+            dispatcher.add_handler(CallbackQueryHandler(self.get, pattern='{}_{}'.format(country, "deaths")))
+            dispatcher.add_handler(CallbackQueryHandler(self.get, pattern='{}_{}'.format(country, "recovered")))
+            dispatcher.add_handler(CallbackQueryHandler(self.get, pattern='{}_{}'.format(country, "tests")))
 
-        dispatcher.add_handler(CallbackQueryHandler(self.subscribe, pattern='main'))
-        dispatcher.add_handler(CallbackQueryHandler(self.unsubscribe, pattern='main_unsubscribe'))
+        dispatcher.add_handler(CallbackQueryHandler(self.subscribe, pattern='subscribe_main'))
+        dispatcher.add_handler(CallbackQueryHandler(self.unsubscribe, pattern='unsubscribe_main'))
+        dispatcher.add_handler(CallbackQueryHandler(self.get, pattern='get_main'))
 
         updater.start_polling()
+        print("started")
 
         updater.job_queue.run_repeating(self.update_job, interval=900, first=10)
 
@@ -60,46 +70,36 @@ class Bot:
     def subscribe(self, update, context):
         query = update.callback_query
         tid = update.effective_user.id
-        countries = self.database.get_all("name", "country")
+        callback_to = "subscribe"
 
-        if query is None or query.data == "main":
-            inputs = keyboards.continents()
-            try:
-                update.message.reply_text(inputs[0], reply_markup=inputs[1])
-            except AttributeError:
+        if query is None:
+            self.continents_menu(update, context, query, "subscribe")
+        else:
+            query_data = query.data.split("_")[1]
+
+            if query_data == "main":
+                self.continents_menu(update, context, query, "subscribe")
+            elif query_data == "Antarctica":
+                self.antarctica_menu(context, query, callback_to)
+            elif query_data in CONTINENTS:
+                nonsubscribed = self.database.get_nonsubscribed_by_continent(tid, query_data)
+                self.countries_menu(update, context, query, query_data, nonsubscribed, callback_to)
+            elif query_data in self.countries:
+                inputs = keyboards.after_subscription(query_data)
+                self.database.save_subscription(tid, query_data)
                 context.bot.edit_message_text(chat_id=query.message.chat_id,
                                             message_id=query.message.message_id,
                                             text=inputs[0],
                                             reply_markup=inputs[1])
-        elif query.data == "Antarctica":
-            inputs = keyboards.Antarctica()
-            context.bot.edit_message_text(chat_id=query.message.chat_id,
-                                        message_id=query.message.message_id,
-                                        text=inputs[0],
-                                        reply_markup=inputs[1])
-        elif query.data in CONTINENTS:
-            nonsubscribed = self.database.get_nonsubscribed_by_continent(tid, query.data)
-            inputs = keyboards.nonsubscribed_by_continent(query.data, nonsubscribed)
-            context.bot.edit_message_text(chat_id=query.message.chat_id,
-                                        message_id=query.message.message_id,
-                                        text=inputs[0],
-                                        reply_markup=inputs[1])
-        elif query.data in countries:
-            inputs = keyboards.after_subscription(query.data)
-            self.database.save_subscription(tid, query.data)
-            context.bot.edit_message_text(chat_id=query.message.chat_id,
-                                        message_id=query.message.message_id,
-                                        text=inputs[0],
-                                        reply_markup=inputs[1])
-        else:
-            self.unsubscribe(update,context)
+#            else:
+#                self.unsubscribe(update,context)
 
     def unsubscribe(self, update, context):
         query = update.callback_query
         subscriptions = self.database.get_where("subscription", "user",
                                                 "tid", update.effective_user.id)
 
-        if query is None or query.data == "main_unsubscribe":
+        if query is None or query.data == "unsubscribe_main":
             inputs = keyboards.subscribed(subscriptions)
             try:
                 update.message.reply_text(inputs[0], reply_markup=inputs[1])
@@ -109,7 +109,7 @@ class Bot:
                                             text=inputs[0],
                                             reply_markup=inputs[1])
         else:
-            unsubscribed = query.data.replace("_unsubscribe", "")
+            unsubscribed = query.data.replace("unsubscribe_", "")
             self.database.save_subscription(update.effective_user.id, unsubscribed)
             inputs = keyboards.after_unsubscription(unsubscribed)
             try:
@@ -119,6 +119,67 @@ class Bot:
                                             reply_markup=inputs[1])
             except:
                 update.message.reply_text(inputs[0], reply_markup=inputs[1])
+
+    def get(self, update, context):
+        query = update.callback_query
+        tid = update.effective_user.id
+        callback_to = "get"
+
+        if query is None:
+            self.continents_menu(update, context, query, callback_to)
+        else:
+            query_data = query.data.split("_")[1]
+
+            if query_data == "main":
+                self.continents_menu(update, context, query, callback_to)
+            elif query_data == "Antarctica":
+                self.antarctica_menu(context, query, callback_to)
+            elif query_data in CONTINENTS:
+                countries_by_continent = self.database.get_where("name", "country", "continent", query_data)
+                self.countries_menu(update, context, query, query_data, countries_by_continent, callback_to)
+            elif query_data in self.countries:
+                inputs = keyboards.select_data(query_data)
+                context.bot.edit_message_text(chat_id=query.message.chat_id,
+                                            message_id=query.message.message_id,
+                                            text=inputs[0],
+                                            reply_markup=inputs[1])
+            else:
+                country = query.data.split("_")[0]
+                data = query.data.split("_")[1]
+                amount = jobs.get_data(country, data)
+                context.bot.edit_message_text(chat_id=query.message.chat_id,
+                                            message_id=query.message.message_id,
+                                            text="""
+                                            Number of {} in {} is {}
+                                            """.format(data,
+                                                country,
+                                                amount))
+
+    def antarctica_menu(self, context, query, callback_to):
+            inputs = keyboards.Antarctica(callback_to)
+            context.bot.edit_message_text(chat_id=query.message.chat_id,
+                                        message_id=query.message.message_id,
+                                        text=inputs[0],
+                                        reply_markup=inputs[1])
+
+
+    def countries_menu(self, update, context, query, continent, countries, callback_to):
+            inputs = keyboards.by_continent(continent, countries, callback_to)
+            context.bot.edit_message_text(chat_id=query.message.chat_id,
+                                        message_id=query.message.message_id,
+                                        text=inputs[0],
+                                        reply_markup=inputs[1])
+
+
+    def continents_menu(self, update, context, query, callback_to):
+        inputs = keyboards.continents(callback_to)
+        try:
+            update.message.reply_text(inputs[0], reply_markup=inputs[1])
+        except AttributeError:
+            context.bot.edit_message_text(chat_id=query.message.chat_id,
+                                        message_id=query.message.message_id,
+                                        text=inputs[0],
+                                        reply_markup=inputs[1])
 
     def update_job(self, context):
         for country in self.database.get_all("name", "country"):
