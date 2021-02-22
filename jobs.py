@@ -41,7 +41,7 @@ def check_updates(country, old_cases, old_deaths, old_recovered, old_tests):
     return updates
 
 def generate_update_message(country, updates):
-    message = f"New update for {country}  {get_country_flag(country)}\n"                                                )
+    message = f"New update for {country}  {get_country_flag(country)}\n"
 
     if updates["cases"] != []:
         message += f"""
