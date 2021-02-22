@@ -3,66 +3,55 @@ from jobs import get_country_flag
 
 def by_continent(continent, countries, callback_to):
     selected_continent_keyboard = []
+    remainder = len(countries) % 3
+    len_ = len(countries) if remainder == 0 else len(countries) - remainder
 
-    for i in range(0, len(countries), 3):
-        try:
-            selected_continent_keyboard.append([
-            InlineKeyboardButton("{} {}".format(countries[i],
-                                                get_country_flag(countries[i])),
-                                                callback_data="{}_{}"
-                                                .format(callback_to, countries[i])),
-            InlineKeyboardButton("{} {}".format(countries[i+1],
-                                                get_country_flag(countries[i+1])),
-                                                callback_data="{}_{}"
-                                                .format(callback_to, countries[i+1])),
-            InlineKeyboardButton("{} {}".format(countries[i+2],
-                                                get_country_flag(countries[i+2])),
-                                                callback_data="{}_{}"
-                                                .format(callback_to, countries[i+2]))
-                    ])
-        except:
-            try:
-                selected_continent_keyboard.append([
-            InlineKeyboardButton("{} {}".format(countries[i],
-                                                get_country_flag(countries[i])),
-                                                callback_data="{}_{}"
-                                                .format(callback_to, countries[i])),
-            InlineKeyboardButton("{} {}".format(countries[i+1],
-                                                get_country_flag(countries[i+1])),
-                                                callback_data="{}_{}"
-                                                .format(callback_to, countries[i+1]))
+    for i in range(0, len_, 3):
+        selected_continent_keyboard.append([
+        InlineKeyboardButton(f"{countries[i]} {get_country_flag(countries[i])}",
+                                            callback_data=f"{callback_to}_{countries[i]}"),
+        InlineKeyboardButton(f"{countries[i+1]} {get_country_flag(countries[i+1])}",
+                                            callback_data=f"{callback_to}_{countries[i+1]}"),
+        InlineKeyboardButton(f"{countries[i+2]} {get_country_flag(countries[i+2])}",
+                                                callback_data=f"{callback_to}_{countries[i+2]}")
                 ])
-            except:
-                selected_continent_keyboard.append([
-            InlineKeyboardButton("{} {}".format(countries[i],
-                                                get_country_flag(countries[i])),
-                                                callback_data="{}_{}"
-                                                .format(callback_to, countries[i]))
+
+    if remainder == 2:
+        selected_continent_keyboard.append([
+            InlineKeyboardButton(f"{countries[-2]} {get_country_flag(countries[-2])}",
+                                                callback_data=f"{callback_to}_{countries[-2]}"),
+            InlineKeyboardButton(f"{countries[-1]} {get_country_flag(countries[-1])}",
+                                                callback_data=f"{callback_to}_{countries[-1]}")
                 ])
+    elif remainder == 1:
+        selected_continent_keyboard.append([
+            InlineKeyboardButton(f"{countries[-1]} {get_country_flag(countries[-1])}",
+                                            callback_data=f"{callback_to}_{countries[-1]}")
+            ])
 
     selected_continent_keyboard.append([
         InlineKeyboardButton("<< Back to continents menu",
-            callback_data="{}_main".format(callback_to))
+            callback_data=f"{callback_to}_main")
             ])
 
-    return "Here is the list of the countries in {}".format(continent), InlineKeyboardMarkup(selected_continent_keyboard)
+    return f"Here is the list of the countries in {continent}", InlineKeyboardMarkup(selected_continent_keyboard)
 
 def continents(callback_to):
     continents_keyboard =[
         [
-            InlineKeyboardButton("Asia", callback_data="{}_Asia".format(callback_to)),
-            InlineKeyboardButton("Africa", callback_data="{}_Africa".format(callback_to))
+            InlineKeyboardButton("Asia", callback_data=f"{callback_to}_Asia"),
+            InlineKeyboardButton("Africa", callback_data=f"{callback_to}_Africa")
                 ],
         [
-            InlineKeyboardButton("North America", callback_data="{}_North America".format(callback_to)),
-            InlineKeyboardButton("South America", callback_data="{}_South America".format(callback_to))
+            InlineKeyboardButton("North America", callback_data=f"{callback_to}_North America"),
+            InlineKeyboardButton("South America", callback_data=f"{callback_to}_South America")
                 ],
         [
-            InlineKeyboardButton("Antarctica", callback_data="{}_Antarctica".format(callback_to)),
-            InlineKeyboardButton("Europe", callback_data="{}_Europe".format(callback_to))
+            InlineKeyboardButton("Antarctica", callback_data=f"{callback_to}_Antarctica"),
+            InlineKeyboardButton("Europe", callback_data=f"{callback_to}_Europe")
                 ],
         [
-            InlineKeyboardButton("Oceania", callback_data="{}_Oceania".format(callback_to))
+            InlineKeyboardButton("Oceania", callback_data=f"{callback_to}_Oceania")
                 ]
     ]
 
@@ -70,7 +59,7 @@ def continents(callback_to):
 
 def Antarctica(callback_to):
     selected_continent_keyboard= [
-       [ InlineKeyboardButton("<< Back to continents menu", callback_data="{}_main".format(callback_to)) ]
+       [ InlineKeyboardButton("<< Back to continents menu", callback_data=f"{callback_to}_main") ]
             ]
 
     return "Looks like no man's land.", InlineKeyboardMarkup(selected_continent_keyboard)
@@ -80,14 +69,14 @@ def after_subscription(country):
             [InlineKeyboardButton("<< Back to continents menu", callback_data="subscribe_main")]
             ]
 
-    return "You are successfully subscribed to {}".format(country), InlineKeyboardMarkup(subscribed_keyboard)
+    return f"You are successfully subscribed to {country}", InlineKeyboardMarkup(subscribed_keyboard)
 
 def after_unsubscription(country):
     unsubscribed_keyboard = [
             [InlineKeyboardButton("<< Back to unsubscription menu", callback_data="unsubcribe_main")]
             ]
 
-    return "{} is unsubscribed".format(country), InlineKeyboardMarkup(unsubscribed_keyboard)
+    return f"{country} is unsubscribed", InlineKeyboardMarkup(unsubscribed_keyboard)
 
 def github():
     github_keyboard = [
@@ -102,8 +91,8 @@ def subscribed(subscriptions):
     for i in subscriptions:
         print (i)
         unsubscription_keyboard.append([
-            InlineKeyboardButton('{} {}'
-                .format(i, get_country_flag(i)), callback_data='{}_unsubscribe'.format(i))
+            InlineKeyboardButton(f'{i} {get_country_flag(i)}',
+                callback_data=f'{i}_unsubscribe')
                 ])
 
     return "Here are the countries you subscribed to.\nClick to unsubscribe.", InlineKeyboardMarkup(unsubscription_keyboard)
@@ -114,10 +103,10 @@ def select_data(country):
 
     for i in range(0, len(data), 4):
         data_keyboard.append([
-             InlineKeyboardButton(data[i], callback_data="{}_{}".format(country, data[i])),
-             InlineKeyboardButton(data[i+1], callback_data="{}_{}".format(country, data[i+1])),
-             InlineKeyboardButton(data[i+2], callback_data="{}_{}".format(country, data[i+2])),
-             InlineKeyboardButton(data[i+3], callback_data="{}_{}".format(country, data[i+3]))
+             InlineKeyboardButton(data[i], callback_data=f"{country}_{data[i]}"),
+             InlineKeyboardButton(data[i+1], callback_data=f"{country}_{data[i+1]}"),
+             InlineKeyboardButton(data[i+2], callback_data=f"{country}_{data[i+2]}"),
+             InlineKeyboardButton(data[i+3], callback_data=f"{country}_{data[i+3]}")
             ])
 
     return "Please select which data you would like to know.", InlineKeyboardMarkup(data_keyboard)

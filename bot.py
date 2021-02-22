@@ -30,17 +30,17 @@ class Bot:
         dispatcher.add_handler(CommandHandler('get', self.get))
 
         for continent in CONTINENTS:
-            dispatcher.add_handler(CallbackQueryHandler(self.subscribe, pattern="subscribe_{}".format(continent)))
-            dispatcher.add_handler(CallbackQueryHandler(self.get, pattern="get_{}".format(continent)))
+            dispatcher.add_handler(CallbackQueryHandler(self.subscribe, pattern=f"subscribe_{continent}"))
+            dispatcher.add_handler(CallbackQueryHandler(self.get, pattern=f"get_{continent}"))
 
         for country in self.countries:
-            dispatcher.add_handler(CallbackQueryHandler(self.subscribe, pattern='subscribe_{}'.format(country)))
-            dispatcher.add_handler(CallbackQueryHandler(self.unsubscribe, pattern='unsubscribe_{}'.format(country)))
-            dispatcher.add_handler(CallbackQueryHandler(self.get, pattern='get_{}'.format(country)))
-            dispatcher.add_handler(CallbackQueryHandler(self.get, pattern='{}_{}'.format(country, "cases")))
-            dispatcher.add_handler(CallbackQueryHandler(self.get, pattern='{}_{}'.format(country, "deaths")))
-            dispatcher.add_handler(CallbackQueryHandler(self.get, pattern='{}_{}'.format(country, "recovered")))
-            dispatcher.add_handler(CallbackQueryHandler(self.get, pattern='{}_{}'.format(country, "tests")))
+            dispatcher.add_handler(CallbackQueryHandler(self.subscribe, pattern=f'subscribe_{country}'))
+            dispatcher.add_handler(CallbackQueryHandler(self.unsubscribe, pattern=f'unsubscribe_{country}'))
+            dispatcher.add_handler(CallbackQueryHandler(self.get, pattern=f'get_{country}'))
+            dispatcher.add_handler(CallbackQueryHandler(self.get, pattern=f'{country}_cases'))
+            dispatcher.add_handler(CallbackQueryHandler(self.get, pattern=f'{country}_deaths'))
+            dispatcher.add_handler(CallbackQueryHandler(self.get, pattern=f'{country}_recovered'))
+            dispatcher.add_handler(CallbackQueryHandler(self.get, pattern=f'{country}_tests'))
 
         dispatcher.add_handler(CallbackQueryHandler(self.subscribe, pattern='subscribe_main'))
         dispatcher.add_handler(CallbackQueryHandler(self.unsubscribe, pattern='unsubscribe_main'))
@@ -63,43 +63,6 @@ class Bot:
                                     reply_markup=keyboards.github()[1])
         except telegram.error.Unauthorized:
             self.database.delete_user(update.effective_chat.id)
-
-#    def subscribe(self, update, context):
-#        query = update.callback_query
-#        tid = update.effective_user.id
-#
-#        if query is None or query.data == "subscribe_main":
-#            self.continents_menu(update, context, query, "subscribe")
-##            inputs = keyboards.continents()
-##            try:
-##                update.message.reply_text(inputs[0], reply_markup=inputs[1])
-##            except AttributeError:
-##                context.bot.edit_message_text(chat_id=query.message.chat_id,
-##                                            message_id=query.message.message_id,
-##                                            text=inputs[0],
-##                                            reply_markup=inputs[1])
-#        elif query.data == "subscribe_Antarctica":
-#            inputs = keyboards.Antarctica("subscribe")
-#            context.bot.edit_message_text(chat_id=query.message.chat_id,
-#                                        message_id=query.message.message_id,
-#                                        text=inputs[0],
-#                                        reply_markup=inputs[1])
-#        elif query.data.split("_")[1] in CONTINENTS:
-#            nonsubscribed = self.database.get_nonsubscribed_by_continent(tid, query.data)
-#            inputs = keyboards.by_continent(query.data, nonsubscribed, "subscribe")
-#            context.bot.edit_message_text(chat_id=query.message.chat_id,
-#                                        message_id=query.message.message_id,
-#                                        text=inputs[0],
-#                                        reply_markup=inputs[1])
-#        elif "subscribe_" in query.data:
-#            inputs = keyboards.after_subscription(query.data)
-#            self.database.save_subscription(tid, query.data)
-#            context.bot.edit_message_text(chat_id=query.message.chat_id,
-#                                        message_id=query.message.message_id,
-#                                        text=inputs[0],
-#                                        reply_markup=inputs[1])
-##        else:
-##            self.unsubscribe(update,context)
 
     def subscribe(self, update, context):
         query = update.callback_query
@@ -181,31 +144,23 @@ class Bot:
                 country = query.data.split("_")[0]
                 data = query.data.split("_")[1]
                 amount = jobs.get_data(country, data)
-#                context.bot.send_message(chat_id=update.effective_chat.id,
-#                                            text="""
-#                                            Number of {} in {} is {}
-#                                            """.format(data,
-#                                                country,
-#                                                amount))
                 context.bot.edit_message_text(chat_id=query.message.chat_id,
                                             message_id=query.message.message_id,
-                                            text="""
-                                            Number of {} in {} is {}
-                                            """.format(data,
-                                                country,
-                                                amount))
+                                            text=f"""
+                                            Number of {data} in {country} is {amount}
+                                            """)
 
     def antarctica_menu(self, context, query, callback_to):
-            inputs = keyboards.Antarctica(callback_to)
-            context.bot.edit_message_text(chat_id=query.message.chat_id,
+        inputs = keyboards.Antarctica(callback_to)
+        context.bot.edit_message_text(chat_id=query.message.chat_id,
                                         message_id=query.message.message_id,
                                         text=inputs[0],
                                         reply_markup=inputs[1])
 
 
     def countries_menu(self, update, context, query, continent, countries, callback_to):
-            inputs = keyboards.by_continent(continent, countries, callback_to)
-            context.bot.edit_message_text(chat_id=query.message.chat_id,
+        inputs = keyboards.by_continent(continent, countries, callback_to)
+        context.bot.edit_message_text(chat_id=query.message.chat_id,
                                         message_id=query.message.message_id,
                                         text=inputs[0],
                                         reply_markup=inputs[1])

@@ -34,7 +34,7 @@ class Database:
 
     def get_all(self, column, table):
         all_ = []
-        self.cursor.execute("SELECT {} FROM {}".format(column, table))
+        self.cursor.execute(f"SELECT {column} FROM {table}")
 
         try:
             for row in self.cursor.fetchall():
@@ -54,7 +54,7 @@ class Database:
 
     def get_where(self, column, table, where1, where2):
         list_ = []
-        self.cursor.execute("SELECT {} FROM {} WHERE {} = \"{}\"".format(column, table, where1, where2))
+        self.cursor.execute(f"SELECT {column} FROM {table} WHERE {where1} = \"{where2}\"")
 
         for row in self.cursor.fetchall():
             list_.append(list(row)[0])
@@ -62,10 +62,8 @@ class Database:
         return list_
 
     def update(self, table, column, set_, where1, where2):
-        self.cursor.execute("UPDATE {} SET {} = {} " \
-                            "WHERE {} = \"{}\""
-                            .format(table, column, set_, where1, where2))
-
+        self.cursor.execute(f"UPDATE {table} SET {column} = {set_} " \
+                            f"WHERE {where1} = \"{where2}\"")
 
     def initialize_countries(self):
         countries = self.get_all("name", "country")
