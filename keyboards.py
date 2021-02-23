@@ -122,7 +122,7 @@ def after_unsubscription(country):
     unsubscribed_keyboard = [
         [
             InlineKeyboardButton(
-                "<< Back to unsubscription menu", callback_data="unsubcribe_main"
+                "<< Back to unsubscription menu", callback_data="unsubscribe_main"
             )
         ]
     ]
@@ -149,11 +149,10 @@ def subscribed(subscriptions):
     unsubscription_keyboard = []
 
     for i in subscriptions:
-        print(i)
         unsubscription_keyboard.append(
             [
                 InlineKeyboardButton(
-                    f"{i} {get_country_flag(i)}", callback_data=f"{i}_unsubscribe"
+                    f"{i} {get_country_flag(i)}", callback_data=f"unsubscribe_{i}"
                 )
             ]
         )

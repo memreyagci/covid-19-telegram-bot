@@ -30,7 +30,6 @@ class Bot:
         self.database = Database()
         self.countries = self.database.get_all("name", "country")
 
-        # bot = telegram.Bot(token=API)
         updater = Updater(token=API)
         dispatcher = updater.dispatcher
 
@@ -131,9 +130,6 @@ class Bot:
                     reply_markup=inputs[1],
                 )
 
-    #            else:
-    #                self.unsubscribe(update,context)
-
     def unsubscribe(self, update, context):
         query = update.callback_query
         subscriptions = self.database.get_where(
@@ -153,7 +149,7 @@ class Bot:
                 )
         else:
             unsubscribed = query.data.replace("unsubscribe_", "")
-            self.database.save_subscription(update.effective_user.id, unsubscribed)
+            self.database.remove_subscription(update.effective_user.id, unsubscribed)
             inputs = keyboards.after_unsubscription(unsubscribed)
             try:
                 context.bot.edit_message_text(
