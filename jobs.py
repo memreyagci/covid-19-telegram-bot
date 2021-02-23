@@ -1,13 +1,24 @@
+from json import JSONDecodeError
 import requests
 import pycountry_convert
+from time import sleep
 
 OFFSET = 127462 - ord("A")
 
 
-def fetch_data(country=""):
-    data = requests.get(f"https://corona.lmao.ninja/v2/countries/{country}").json()
-
-    return data
+def fetch_data(country=None):
+    try:
+        if country is not None:
+            data = requests.get(
+                f"https://corona.lmao.ninja/v2/countries/{get_country_alpha2(country)}"
+            ).json()
+        else:
+            data = requests.get("https://corona.lmao.ninja/v2/countries").json()
+    except JSONDecodeError:
+        sleep(5)
+        data = fetch_data(country)
+    else:
+        return data
 
 
 def check_updates(country, old_cases, old_deaths, old_recovered, old_tests):
@@ -105,10 +116,18 @@ def get_data(country, data):
     return req[data]
 
 
-def get_country_flag(country):
+def get_country_alpha2(country):
     try:
         code = pycountry_convert.country_name_to_country_alpha2(country)
-    except KeyError:
-        code = fetch_data(country)["countryInfo"]["iso2"]
+    except (KeyError, TypeError):
+        code = requests.get(f"https://corona.lmao.ninja/v2/countries/{country}").json()[
+            "countryInfo"
+        ]["iso2"]
+
+    return code
+
+
+def get_country_flag(country):
+    code = get_country_alpha2(country)
 
     return chr(ord(code[0]) + OFFSET) + chr(ord(code[1]) + OFFSET)
