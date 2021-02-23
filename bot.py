@@ -78,9 +78,8 @@ class Bot:
         dispatcher.add_handler(CallbackQueryHandler(self.get, pattern="get_main"))
 
         updater.start_polling()
-        print("started")
-
         updater.job_queue.run_repeating(self.update_job, interval=900, first=10)
+        updater.idle()
 
     def start(self, update, context):
         try:
@@ -240,7 +239,6 @@ class Bot:
                 self.database.get_where("recovered", "country", "name", country)[0],
                 self.database.get_where("tests", "country", "name", country)[0],
             )
-            print(country)
 
             if updates is not False:
                 if updates["cases"] != []:
