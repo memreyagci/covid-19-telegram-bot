@@ -1,4 +1,5 @@
 import json
+import jobs
 import requests
 import pycountry_convert
 import mysql.connector
@@ -75,7 +76,7 @@ class Database:
     def initialize_countries(self):
         countries = self.get_all("name", "country")
         try:
-            data = requests.get("https://corona.lmao.ninja/v2/countries").json()
+            data = jobs.fetch_data()
         except json.decoder.JSONDecodeError:  # To prevent crashing of bot.py in case of Error 502 of corona.lmao.ninja
             pass
         else:

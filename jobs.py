@@ -4,6 +4,12 @@ import pycountry_convert
 OFFSET = 127462 - ord("A")
 
 
+def fetch_data(country=""):
+    data = requests.get(f"https://corona.lmao.ninja/v2/countries/{country}").json()
+
+    return data
+
+
 def check_updates(country, old_cases, old_deaths, old_recovered, old_tests):
     (
         new_cases,
@@ -72,7 +78,7 @@ def generate_update_message(country, updates):
 
 
 def get_new(country):
-    req = requests.get(f"https://corona.lmao.ninja/v2/countries/{country}").json()
+    req = fetch_data(country)
 
     new_cases = req["cases"]
     today_cases = req["todayRecovered"]
@@ -94,7 +100,7 @@ def get_new(country):
 
 
 def get_data(country, data):
-    req = requests.get(f"https://corona.lmao.ninja/v2/countries/{country}").json()
+    req = fetch_data(country)
 
     return req[data]
 
@@ -102,9 +108,7 @@ def get_data(country, data):
 def get_country_flag(country):
     try:
         code = pycountry_convert.country_name_to_country_alpha2(country)
-    except:
-        code = requests.get(f"https://corona.lmao.ninja/v2/countries/{country}").json()[
-            "countryInfo"
-        ]["iso2"]
+    except KeyError:
+        code = fetch_data(country)["countryInfo"]["iso2"]
 
     return chr(ord(code[0]) + OFFSET) + chr(ord(code[1]) + OFFSET)
