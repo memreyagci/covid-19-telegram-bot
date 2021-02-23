@@ -67,22 +67,22 @@ def generate_update_message(country, updates):
 
     if updates["cases"] != []:
         message += f"""
-            Cases: {updates["cases"][0]} (+{updates["cases"][1]})
+            Cases: {updates["cases"][0]} ({'+' if updates["cases"][1] > 0 else ''}{updates["cases"][1]})
             Today: {updates["cases"][2]}
             """
     if updates["deaths"] != []:
         message += f"""
-            Deaths: {updates["deaths"][0]} (+{updates["deaths"][1]})
+            Deaths: {updates["deaths"][0]} ({'+' if updates["deaths"][1] > 0 else ''}{updates["deaths"][1]})
             Today: {updates["deaths"][2]}
             """
     if updates["recovered"] != []:
         message += f"""
-            Recovered: {updates["recovered"][0]} (+{updates["recovered"][1]})
+            Recovered: {updates["recovered"][0]} ({'+' if updates["recovered"][1] > 0 else ''}{updates["recovered"][1]})
             Today: {updates["recovered"][2]}
             """
     if updates["tests"] != []:
         message += f"""
-            Tests: {updates["tests"][0]} (+{updates["tests"][1]})
+            Tests: {updates["tests"][0]} ({'+' if updates["tests"][1] > 0 else ''}{updates["tests"][1]})
             """
 
     return message
