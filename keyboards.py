@@ -99,9 +99,7 @@ def Antarctica(callback_to):
         ]
     ]
 
-    return "Looks like no man's land.", InlineKeyboardMarkup(
-        keyboard
-    )
+    return "Looks like no man's land.", InlineKeyboardMarkup(keyboard)
 
 
 def after_subscription(country):
@@ -182,6 +180,8 @@ def select_data(country):
                 ),
             ]
         )
+
+    keyboard.append([InlineKeyboardButton("all", callback_data=f"{country}_all")])
 
     return "Please select which data you would like to know.", InlineKeyboardMarkup(
         keyboard
