@@ -21,7 +21,7 @@ CONTINENTS = [
 DATA = ["cases", "deaths", "recovered", "tests", "all"]
 
 with db.connection() as curr:
-    COUNTRIES = db.get_all(curr, "name", "country")
+    COUNTRIES = db.get(curr, "name", "country")
 
 
 def add_handlers():
@@ -115,7 +115,7 @@ def unsubscribe(update, context):
     query = update.callback_query
 
     with db.connection() as cursor:
-        subscriptions = db.get_where(
+        subscriptions = db.get(
             cursor, "subscription", "user", "tid", update.effective_user.id
         )
 
@@ -164,7 +164,7 @@ def get(update, context):
         elif query_data in CONTINENTS:
 
             with db.connection() as cursor:
-                countries_by_continent = db.get_where(
+                countries_by_continent = db.get(
                     cursor, "name", "country", "continent", query_data
                 )
 
@@ -247,10 +247,10 @@ def continents_menu(update, context, query, callback_to):
 def update_job(context):
     with db.connection() as cursor:
         for country in COUNTRIES:
-            cases = db.get_where(cursor, "cases", "country", "name", country)[0]
-            deaths = db.get_where(cursor, "deaths", "country", "name", country)[0]
-            recovered = db.get_where(cursor, "recovered", "country", "name", country)[0]
-            tests = db.get_where(cursor, "tests", "country", "name", country)[0]
+            cases = db.get(cursor, "cases", "country", "name", country)[0]
+            deaths = db.get(cursor, "deaths", "country", "name", country)[0]
+            recovered = db.get(cursor, "recovered", "country", "name", country)[0]
+            tests = db.get(cursor, "tests", "country", "name", country)[0]
 
             updates = jobs.check_updates(country, cases, deaths, recovered, tests)
 

@@ -27,14 +27,17 @@ def connection():
         conn.close()
 
 
-def get_all(cursor, column, table):
-    all_ = []
-    cursor.execute(f"SELECT {column} FROM {table}")
+def get(cursor, column, table, where1=None, where2=None):
+    result = []
+    statement = f"SELECT {column} FROM {table}"
+    statement += f' WHERE {where1} = "{where2}"' if where1 is not None else ""
+
+    cursor.execute(statement)
 
     try:
         for row in cursor.fetchall():
-            all_.append(row[0])
-        return all_
+            result.append(row[0])
+        return result
     except:
         return []
 
@@ -47,16 +50,6 @@ def get_users(cursor):
         users_subscriptions.append(list(row))
 
     return users_subscriptions
-
-
-def get_where(cursor, column, table, where1, where2):
-    list_ = []
-    cursor.execute(f'SELECT {column} FROM {table} WHERE {where1} = "{where2}"')
-
-    for row in cursor.fetchall():
-        list_.append(list(row)[0])
-
-    return list_
 
 
 def update(cursor, table, column, set_, where1, where2):
