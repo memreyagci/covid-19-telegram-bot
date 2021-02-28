@@ -1,11 +1,12 @@
 import json
-import jobs
-import requests
-import pycountry_convert
-import mysql.connector
-from mysql.connector import Error
-import config
 from contextlib import contextmanager
+
+import mysql.connector
+import pycountry_convert
+from mysql.connector import Error
+
+import config
+import jobs
 
 
 @contextmanager

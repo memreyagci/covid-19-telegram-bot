@@ -1,7 +1,8 @@
 from json import JSONDecodeError
-import requests
-import pycountry_convert
 from time import sleep
+
+import pycountry_convert
+import requests
 
 OFFSET = 127462 - ord("A")
 

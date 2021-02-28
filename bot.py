@@ -4,10 +4,9 @@ import os
 import telegram
 from telegram.ext import CallbackQueryHandler, CommandHandler, Updater
 
-import keyboards
-import jobs
-
 import database as db
+import jobs
+import keyboards
 
 API = os.environ.get("CVBOT_API")
 CONTINENTS = [

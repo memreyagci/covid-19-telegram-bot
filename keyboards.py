@@ -1,4 +1,5 @@
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+
 from jobs import get_country_flag
 
 
@@ -177,6 +178,4 @@ def select_data(country):
 
     keyboard.append([InlineKeyboardButton("all", callback_data=f"{country}_all")])
 
-    return "Please select a data.", InlineKeyboardMarkup(
-        keyboard
-    )
+    return "Please select a data.", InlineKeyboardMarkup(keyboard)
