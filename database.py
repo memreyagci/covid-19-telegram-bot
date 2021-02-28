@@ -113,7 +113,7 @@ def create_tables(cursor):
 
 
 def initialize_countries(cursor):
-    countries = get_all(cursor, "name", "country")
+    countries = get(cursor, "name", "country")
     try:
         data = jobs.fetch_data()
     except json.decoder.JSONDecodeError:  # To prevent crashing of bot.py in case of Error 502 of corona.lmao.ninja
