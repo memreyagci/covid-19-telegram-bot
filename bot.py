@@ -19,7 +19,7 @@ CONTINENTS = [
     "Europe",
     "Oceania",
 ]
-DATA = ["cases, deaths, recovered, tests, all"]
+DATA = ["cases", "deaths", "recovered", "tests", "all"]
 
 with db.connection() as curr:
     COUNTRIES = db.get_all(curr, "name", "country")
