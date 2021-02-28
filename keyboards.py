@@ -56,9 +56,7 @@ def by_continent(continent, countries, callback_to):
         ]
     )
 
-    return f"Here is the list of the countries in {continent}", InlineKeyboardMarkup(
-        keyboard
-    )
+    return f"Here are the countries in {continent}", InlineKeyboardMarkup(keyboard)
 
 
 def continents(callback_to):
@@ -85,7 +83,7 @@ def continents(callback_to):
     ]
 
     return (
-        "Please select the continent which the country you want choose to is in:",
+        "Please select a continent:",
         InlineKeyboardMarkup(keyboard),
     )
 
@@ -94,7 +92,7 @@ def Antarctica(callback_to):
     keyboard = [
         [
             InlineKeyboardButton(
-                "<< Back to continents menu", callback_data=f"{callback_to}_main"
+                "<< Back to continents", callback_data=f"{callback_to}_main"
             )
         ]
     ]
@@ -104,11 +102,7 @@ def Antarctica(callback_to):
 
 def after_subscription(country):
     keyboard = [
-        [
-            InlineKeyboardButton(
-                "<< Back to continents menu", callback_data="subscribe_main"
-            )
-        ]
+        [InlineKeyboardButton("<< Back to continents", callback_data="subscribe_main")]
     ]
 
     return f"You are successfully subscribed to {country}", InlineKeyboardMarkup(
@@ -120,7 +114,7 @@ def after_unsubscription(country):
     keyboard = [
         [
             InlineKeyboardButton(
-                "<< Back to unsubscription menu", callback_data="unsubscribe_main"
+                "<< Back to unsubscriptions", callback_data="unsubscribe_main"
             )
         ]
     ]
@@ -138,7 +132,7 @@ def github():
     ]
 
     return (
-        "Here is the GitHub repo of this bot. You can help me out by contributing and creating issues.",
+        "Here is the GitHub repo of this bot. You can help me out by contributing or creating issues.",
         InlineKeyboardMarkup(keyboard),
     )
 
@@ -156,7 +150,7 @@ def subscribed(subscriptions):
         )
 
     return (
-        "Here are the countries you subscribed to.\nClick to unsubscribe.",
+        "Here are the subscriptions.\nClick to unsubscribe.",
         InlineKeyboardMarkup(unkeyboard),
     )
 
@@ -183,6 +177,6 @@ def select_data(country):
 
     keyboard.append([InlineKeyboardButton("all", callback_data=f"{country}_all")])
 
-    return "Please select which data you would like to know.", InlineKeyboardMarkup(
+    return "Please select a data.", InlineKeyboardMarkup(
         keyboard
     )
