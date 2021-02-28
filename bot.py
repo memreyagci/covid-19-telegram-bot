@@ -255,7 +255,7 @@ def update_job(context):
 
             updates = jobs.check_updates(country, cases, deaths, recovered, tests)
 
-            if updates is not False:
+            if isinstance(updates, dict):
                 if updates["cases"] != []:
                     db.update(
                         cursor, "country", "cases", updates["cases"][0], "name", country
