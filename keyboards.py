@@ -3,7 +3,7 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from jobs import get_country_flag
 
 
-def by_continent(continent, countries, callback_to):
+def by_continent(countries, callback_to):
     keyboard = []
     remainder = len(countries) % 3
     len_ = len(countries) if remainder == 0 else len(countries) - remainder
@@ -57,84 +57,90 @@ def by_continent(continent, countries, callback_to):
         ]
     )
 
-    return f"Here are the countries in {continent}", InlineKeyboardMarkup(keyboard)
+    return InlineKeyboardMarkup(keyboard)
 
 
 def continents(callback_to):
-    keyboard = [
-        [
-            InlineKeyboardButton("Asia", callback_data=f"{callback_to}_Asia"),
-            InlineKeyboardButton("Africa", callback_data=f"{callback_to}_Africa"),
-        ],
-        [
-            InlineKeyboardButton(
-                "North America", callback_data=f"{callback_to}_North America"
-            ),
-            InlineKeyboardButton(
-                "South America", callback_data=f"{callback_to}_South America"
-            ),
-        ],
-        [
-            InlineKeyboardButton(
-                "Antarctica", callback_data=f"{callback_to}_Antarctica"
-            ),
-            InlineKeyboardButton("Europe", callback_data=f"{callback_to}_Europe"),
-        ],
-        [InlineKeyboardButton("Oceania", callback_data=f"{callback_to}_Oceania")],
-    ]
-
     return (
-        "Please select a continent:",
-        InlineKeyboardMarkup(keyboard),
+        InlineKeyboardMarkup(
+            [
+                [
+                    InlineKeyboardButton("Asia", callback_data=f"{callback_to}_Asia"),
+                    InlineKeyboardButton(
+                        "Africa", callback_data=f"{callback_to}_Africa"
+                    ),
+                ],
+                [
+                    InlineKeyboardButton(
+                        "North America", callback_data=f"{callback_to}_North America"
+                    ),
+                    InlineKeyboardButton(
+                        "South America", callback_data=f"{callback_to}_South America"
+                    ),
+                ],
+                [
+                    InlineKeyboardButton(
+                        "Antarctica", callback_data=f"{callback_to}_Antarctica"
+                    ),
+                    InlineKeyboardButton(
+                        "Europe", callback_data=f"{callback_to}_Europe"
+                    ),
+                ],
+                [
+                    InlineKeyboardButton(
+                        "Oceania", callback_data=f"{callback_to}_Oceania"
+                    )
+                ],
+            ]
+        ),
     )
 
 
-def Antarctica(callback_to):
-    keyboard = [
+def antarctica(callback_to):
+    return InlineKeyboardMarkup(
         [
-            InlineKeyboardButton(
-                "<< Back to continents", callback_data=f"{callback_to}_main"
-            )
+            [
+                InlineKeyboardButton(
+                    "<< Back to continents", callback_data=f"{callback_to}_main"
+                )
+            ]
         ]
-    ]
-
-    return "Looks like no man's land.", InlineKeyboardMarkup(keyboard)
-
-
-def after_subscription(country):
-    keyboard = [
-        [InlineKeyboardButton("<< Back to continents", callback_data="subscribe_main")]
-    ]
-
-    return f"You are successfully subscribed to {country}", InlineKeyboardMarkup(
-        keyboard
     )
 
 
-def after_unsubscription(country):
-    keyboard = [
+def after_subscription():
+    return InlineKeyboardMarkup(
         [
-            InlineKeyboardButton(
-                "<< Back to unsubscriptions", callback_data="unsubscribe_main"
-            )
+            [
+                InlineKeyboardButton(
+                    "<< Back to continents", callback_data="subscribe_main"
+                )
+            ]
         ]
-    ]
+    )
 
-    return f"{country} is unsubscribed", InlineKeyboardMarkup(keyboard)
+
+def after_unsubscription():
+    return InlineKeyboardMarkup(
+        [
+            [
+                InlineKeyboardButton(
+                    "<< Back to unsubscriptions", callback_data="unsubscribe_main"
+                )
+            ]
+        ]
+    )
 
 
 def github():
-    keyboard = [
+    return InlineKeyboardMarkup(
         [
-            InlineKeyboardButton(
-                "GitHub", url="https://github.com/memreyagci/covid-19-telegram-bot"
-            )
+            [
+                InlineKeyboardButton(
+                    "GitHub", url="https://github.com/memreyagci/covid-19-telegram-bot"
+                )
+            ]
         ]
-    ]
-
-    return (
-        "Here is the GitHub repo of this bot. You can help me out by contributing or creating issues.",
-        InlineKeyboardMarkup(keyboard),
     )
 
 
@@ -150,10 +156,7 @@ def subscribed(subscriptions):
             ]
         )
 
-    return (
-        "Here are the subscriptions.\nClick to unsubscribe.",
-        InlineKeyboardMarkup(unkeyboard),
-    )
+    return InlineKeyboardMarkup(unkeyboard)
 
 
 def select_data(country):
@@ -178,4 +181,4 @@ def select_data(country):
 
     keyboard.append([InlineKeyboardButton("all", callback_data=f"{country}_all")])
 
-    return "Please select a data.", InlineKeyboardMarkup(keyboard)
+    return InlineKeyboardMarkup(keyboard)

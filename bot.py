@@ -7,6 +7,7 @@ from telegram.ext import CallbackQueryHandler, CommandHandler, Updater
 import database as db
 import jobs
 import keyboards
+import texts
 
 API = os.environ.get("CVBOT_API")
 CONTINENTS = [
@@ -61,15 +62,12 @@ def start(update, context):
     try:
         context.bot.send_message(
             chat_id=update.effective_chat.id,
-            text="Welcome to the COVID-19 Worldwide Statististics Bot!\n"
-            "You can access to the list of countries to subscribe via /subscribe command, "
-            "and to unsubscribe via /unsubscribe.\n To see this message again, "
-            "use the /start command. Command can also be seen via the / (slash) icon below, left of the attachments.",
+            text=texts.welcome(),
         )
         context.bot.send_message(
             chat_id=update.effective_chat.id,
-            text=keyboards.github()[0],
-            reply_markup=keyboards.github()[1],
+            text=texts.github(),
+            reply_markup=keyboards.github(),
         )
     except telegram.error.Unauthorized:
         with db.connection() as cursor:
@@ -98,16 +96,14 @@ def subscribe(update, context):
 
             countries_menu(context, query, query_data, nonsubscribed, callback_to)
         elif query_data in COUNTRIES:
-            inputs = keyboards.after_subscription(query_data)
-
             with db.connection() as cursor:
                 db.save_subscription(cursor, tid, query_data)
 
             context.bot.edit_message_text(
                 chat_id=query.message.chat_id,
                 message_id=query.message.message_id,
-                text=inputs[0],
-                reply_markup=inputs[1],
+                text=texts.after_subscription(query_data),
+                reply_markup=keyboards.after_subscription(),
             )
 
 
@@ -120,15 +116,16 @@ def unsubscribe(update, context):
         )
 
     if query is None or query.data == "unsubscribe_main":
-        inputs = keyboards.subscribed(subscriptions)
         try:
-            update.message.reply_text(inputs[0], reply_markup=inputs[1])
+            update.message.reply_text(
+                texts.subscribed(), reply_markup=keyboards.subscribed(subscriptions)
+            )
         except AttributeError:
             context.bot.edit_message_text(
                 chat_id=query.message.chat_id,
                 message_id=query.message.message_id,
-                text=inputs[0],
-                reply_markup=inputs[1],
+                text=texts.subscribed(),
+                reply_markup=keyboards.subscribed(subscriptions),
             )
     else:
         unsubscribed = query.data.replace("unsubscribe_", "")
@@ -136,16 +133,18 @@ def unsubscribe(update, context):
         with db.connection() as cursor:
             db.remove_subscription(cursor, update.effective_user.id, unsubscribed)
 
-        inputs = keyboards.after_unsubscription(unsubscribed)
         try:
             context.bot.edit_message_text(
                 chat_id=query.message.chat_id,
                 message_id=query.message.message_id,
-                text=inputs[0],
-                reply_markup=inputs[1],
+                text=texts.after_unsubscription(unsubscribed),
+                reply_markup=keyboards.after_unsubscription(),
             )
         except:
-            update.message.reply_text(inputs[0], reply_markup=inputs[1])
+            update.message.reply_text(
+                texts.after_subscription(unsubscribed),
+                reply_markup=keyboards.after_subscription(),
+            )
 
 
 def get(update, context):
@@ -172,12 +171,11 @@ def get(update, context):
                 context, query, query_data, countries_by_continent, callback_to
             )
         elif query_data in COUNTRIES:
-            inputs = keyboards.select_data(query_data)
             context.bot.edit_message_text(
                 chat_id=query.message.chat_id,
                 message_id=query.message.message_id,
-                text=inputs[0],
-                reply_markup=inputs[1],
+                text=texts.select_data(),
+                reply_markup=keyboards.select_data(query_data),
             )
         else:
             country = query.data.split("_")[0]
@@ -212,35 +210,34 @@ def get(update, context):
 
 
 def antarctica_menu(context, query, callback_to):
-    inputs = keyboards.Antarctica(callback_to)
     context.bot.edit_message_text(
         chat_id=query.message.chat_id,
         message_id=query.message.message_id,
-        text=inputs[0],
-        reply_markup=inputs[1],
+        text=texts.antarctica(),
+        reply_markup=keyboards.antarctica(callback_to),
     )
 
 
 def countries_menu(context, query, continent, countries, callback_to):
-    inputs = keyboards.by_continent(continent, countries, callback_to)
     context.bot.edit_message_text(
         chat_id=query.message.chat_id,
         message_id=query.message.message_id,
-        text=inputs[0],
-        reply_markup=inputs[1],
+        text=texts.by_continent(continent),
+        reply_markup=keyboards.by_continent(countries, callback_to),
     )
 
 
 def continents_menu(update, context, query, callback_to):
-    inputs = keyboards.continents(callback_to)
     try:
-        update.message.reply_text(inputs[0], reply_markup=inputs[1])
+        update.message.reply_text(
+            texts.continents(), reply_markup=keyboards.continents(callback_to)
+        )
     except AttributeError:
         context.bot.edit_message_text(
             chat_id=query.message.chat_id,
             message_id=query.message.message_id,
-            text=inputs[0],
-            reply_markup=inputs[1],
+            text=texts.continents(),
+            reply_markup=keyboards.continents(callback_to),
         )
 
 

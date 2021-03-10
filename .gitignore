@@ -9,6 +9,7 @@
 !bot.py
 !database.py
 !get_information.py
-!keyboards_texts.py
-!update_message.txt
 !jobs.py
+!keyboards_texts.py
+!texts.py
+!update_message.txt
