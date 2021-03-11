@@ -26,23 +26,28 @@ with db.connection() as curr:
 
 
 def add_handlers():
+    # The commands used in Telegram that starts with '/'. eg. /subscribe
     dispatcher.add_handler(CommandHandler("start", start))
     dispatcher.add_handler(CommandHandler("subscribe", subscribe))
     dispatcher.add_handler(CommandHandler("unsubscribe", unsubscribe))
     dispatcher.add_handler(CommandHandler("get", get))
 
+    # The first step of the commands
     dispatcher.add_handler(CallbackQueryHandler(subscribe, pattern="subscribe_main"))
     dispatcher.add_handler(
         CallbackQueryHandler(unsubscribe, pattern="unsubscribe_main")
     )
     dispatcher.add_handler(CallbackQueryHandler(get, pattern="get_main"))
 
+    # Adding CallbackQueryHandlers to bring related countries after a continent button is clicked
+    # in either subscribe or get menu
     for continent in CONTINENTS:
         dispatcher.add_handler(
             CallbackQueryHandler(subscribe, pattern=f"subscribe_{continent}")
         )
         dispatcher.add_handler(CallbackQueryHandler(get, pattern=f"get_{continent}"))
 
+    # CallbackQueryHandlers of country button clicks, to subsribe, unsubscribe or show data selected
     for country in COUNTRIES:
         dispatcher.add_handler(
             CallbackQueryHandler(subscribe, pattern=f"subscribe_{country}")
@@ -59,6 +64,11 @@ def add_handlers():
 
 
 def start(update, context):
+    """Default command that is run when a user starts a bot
+
+    Raises:
+        telegram.error.Unauthorized: If message cannot be sent, that means user no longer uses the bot, then delete their data.
+    """
     try:
         context.bot.send_message(
             chat_id=update.effective_chat.id,
@@ -79,13 +89,16 @@ def subscribe(update, context):
     tid = update.effective_user.id
     callback_to = "subscribe"
 
+    # Show continents menu
     if query is None:
         continents_menu(update, context, query, "subscribe")
     else:
         query_data = query.data.split("_")[1]
 
+        # Show continents menu
         if query_data == "main":
             continents_menu(update, context, query, "subscribe")
+        # Show countries in selected continent
         elif query_data == "Antarctica":
             antarctica_menu(context, query, callback_to)
         elif query_data in CONTINENTS:
@@ -95,6 +108,7 @@ def subscribe(update, context):
                 )
 
             countries_menu(context, query, query_data, nonsubscribed, callback_to)
+        # Subscribe to selected country
         elif query_data in COUNTRIES:
             with db.connection() as cursor:
                 db.save_subscription(cursor, tid, query_data)
@@ -115,6 +129,7 @@ def unsubscribe(update, context):
             cursor, "subscription", "user", "tid", update.effective_user.id
         )
 
+    # Show nonsubscribed countries
     if query is None or query.data == "unsubscribe_main":
         try:
             update.message.reply_text(
@@ -127,6 +142,7 @@ def unsubscribe(update, context):
                 text=texts.subscribed(),
                 reply_markup=keyboards.subscribed(subscriptions),
             )
+    # Unsubscribe
     else:
         unsubscribed = query.data.replace("unsubscribe_", "")
 
@@ -151,13 +167,16 @@ def get(update, context):
     query = update.callback_query
     callback_to = "get"
 
+    # Show continents menu
     if query is None:
         continents_menu(update, context, query, callback_to)
     else:
         query_data = query.data.split("_")[1]
 
+        # Show continents menu
         if query_data == "main":
             continents_menu(update, context, query, callback_to)
+        # Show countries in selected continent
         elif query_data == "Antarctica":
             antarctica_menu(context, query, callback_to)
         elif query_data in CONTINENTS:
@@ -170,6 +189,7 @@ def get(update, context):
             countries_menu(
                 context, query, query_data, countries_by_continent, callback_to
             )
+        # Show type of data
         elif query_data in COUNTRIES:
             context.bot.edit_message_text(
                 chat_id=query.message.chat_id,
@@ -177,6 +197,7 @@ def get(update, context):
                 text=texts.select_data(),
                 reply_markup=keyboards.select_data(query_data),
             )
+        # Show number of selected data
         else:
             country = query.data.split("_")[0]
             data = query.data.split("_")[1]
