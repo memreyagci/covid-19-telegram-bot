@@ -63,132 +63,132 @@ def fetch_data(country=None):
         return data
 
 
-def check_updates(country, old_cases, old_deaths, old_recovered, old_tests):
+def get_last_data(last_data) -> dict:
+    """Generates a dict of data provided from the database.
+
+    Args:
+        last_data (tuple): Fetched data from the database, with SQL statement "SELECT * FROM country"
+
+    Returns:
+        A nested dict consisting of country name, its data, and their values. For instance:
+            {"Turkey":
+                {"cases": 2835989,
+                 "deaths": 29290,
+                 "recovered": 2659093,
+                 "tests": 34694624}
+                 }
+    """
+
+    dict_ = {}
+
+    for i in last_data:
+        dict_[i[0]] = {"cases": i[2], "deaths": i[3], "recovered": i[4], "tests": i[5]}
+
+    return dict_
+
+
+def check_updates(last_data, current_data) -> dict:
     """Compares old data (on the database) with new (fetched from the API) to determine if there is a change.
 
     Args:
-        country (str): Name of country.
-        old_cases (int): Number of cases on database.
-        old_deaths (int): Number of deaths on database.
-        old_recovered (int): Number of recovered on database.
-        old_tests (int): Number of tests on database.
+        last_data (dict): Previously fetched of all countries, supposed to be provided via get_last_data
+        current (dict): Newly fetched data from the API, supposed to be provided via get_current function.
 
     Returns:
-        A dict mapping data name to a list of new number, difference, and that day's amount. For example:
+        A nested dict of updated data mapping country name to its data and their amount of total, difference, and that day's. For example:
 
-        {'cases': [2835989, 35989, 9231],
-         'deaths': [29290, 290, 63],
-         'recovered': [2659093, 93, 9231],
-         'tests': [34694624, 624]}
+        {"Turkey":{"cases": {"total": 2835989,
+                             "difference": 35989,
+                             "today": 9231}
+                             },
+                   "recovered": {"total": 2659093,
+                                 "difference": 93,
+                                 "today": 9231}
+                                 }
     """
 
-    (
-        new_cases,
-        today_cases,
-        new_deaths,
-        today_deaths,
-        new_recovered,
-        today_recovered,
-        new_tests,
-    ) = get_new(country)
+    updates = {}
 
-    updates = {"cases": [], "deaths": [], "recovered": [], "tests": []}
+    for country in last_data.keys():
+        for data in last_data[country].keys():
+            if current_data[country][data] != last_data[country][data]:
+                updates[country] = (
+                    {} if country not in updates.keys() else updates[country]
+                )
 
-    changed = 1
-
-    if new_cases != old_cases:
-        updates["cases"].append(new_cases)
-        updates["cases"].append(new_cases - old_cases)
-        updates["cases"].append(today_cases)
-        changed = 0
-    if new_deaths != old_deaths:
-        updates["deaths"].append(new_deaths)
-        updates["deaths"].append(new_deaths - old_deaths)
-        updates["deaths"].append(today_deaths)
-        changed = 0
-    if new_recovered != old_recovered:
-        updates["recovered"].append(new_recovered)
-        updates["recovered"].append(new_recovered - old_recovered)
-        updates["recovered"].append(today_recovered)
-        changed = 0
-    if new_tests != old_tests:
-        updates["tests"].append(new_tests)
-        updates["tests"].append(new_tests - old_tests)
-        changed = 0
-
-    if changed == 1:
-        return False
+                if data != "tests":
+                    updates[country][data] = {
+                        "total": current_data[country][data],
+                        "difference": current_data[country][data]
+                        - last_data[country][data],
+                        "today": current_data[country][f"today{str.title(data)}"],
+                    }
+                else:
+                    updates[country][data] = {
+                        "total": current_data[country][data],
+                        "difference": current_data[country][data]
+                        - last_data[country][data],
+                    }
 
     return updates
 
 
-def generate_update_message(country, updates):
+def generate_update_message(updates) -> dict:
     """Generates update message to be send to users.
 
     Args:
-        country (str): Name of country.
         updates (dict): Updated data with new values.
 
     Returns:
-        str: Message to be sent.
+        A dict of messages to be send mapping country names to their messages.
     """
 
-    message = f"New update for {country}  {get_country_flag(country)}\n"
+    messages = {}
 
-    if updates["cases"] != []:
-        message += f"""
-            Cases: {updates["cases"][0]:,} ({'+' if updates["cases"][1] > 0 else ''}{updates["cases"][1]:,})
-            Today: {updates["cases"][2]:,}
-            """
-    if updates["deaths"] != []:
-        message += f"""
-            Deaths: {updates["deaths"][0]:,} ({'+' if updates["deaths"][1] > 0 else ''}{updates["deaths"][1]:,})
-            Today: {updates["deaths"][2]:,}
-            """
-    if updates["recovered"] != []:
-        message += f"""
-            Recovered: {updates["recovered"][0]:,} ({'+' if updates["recovered"][1] > 0 else ''}{updates["recovered"][1]:,})
-            Today: {updates["recovered"][2]:,}
-            """
-    if updates["tests"] != []:
-        message += f"""
-            Tests: {updates["tests"][0]:,} ({'+' if updates["tests"][1] > 0 else ''}{updates["tests"][1]:,})
-            """
+    for country in updates.keys():
+        messages[country] = f"New update for {country}  {get_country_flag(country)}\n"
 
-    return message
+        for data in updates[country].keys():
+            if data != "tests":
+                messages[
+                    country
+                ] += f"""
+            {str.title(data)}: {updates[country][data]["total"]:,} ({'+' if updates[country][data]["difference"] > 0 else ''}{updates[country][data]["difference"]:,})
+            Today: {updates[country][data]["today"]:,}
+                """
+            else:
+                messages[
+                    country
+                ] += f"""
+            {str.title(data)}: {updates[country][data]["total"]:,} ({'+' if updates[country][data]["difference"] > 0 else ''}{updates[country][data]["difference"]:,})
+                """
+
+    return messages
 
 
-def get_new(country):
+def get_current() -> dict:
     """Fetches new data from the API.
 
-    Args:
-        country: Name of country.
-
     Returns:
-        A tuple of total and today's cases, deaths, recovered, and tests (only total). For example:
-
-        (2835989, 9231, 29290, 63, 2659093, 9231, 34694624)
+        A nested dict mapping country names to their data and its values.
     """
 
-    req = fetch_data(country)
+    req = fetch_data()
 
-    new_cases = req["cases"]
-    today_cases = req["todayRecovered"]
-    new_deaths = req["deaths"]
-    today_deaths = req["todayDeaths"]
-    new_recovered = req["recovered"]
-    today_recovered = req["todayRecovered"]
-    new_tests = req["tests"]
+    current_stats = {}
 
-    return (
-        new_cases,
-        today_cases,
-        new_deaths,
-        today_deaths,
-        new_recovered,
-        today_recovered,
-        new_tests,
-    )
+    for i in req:
+        current_stats[i["country"]] = {
+            "cases": i["cases"],
+            "todayCases": i["todayCases"],
+            "deaths": i["deaths"],
+            "todayDeaths": i["todayDeaths"],
+            "recovered": i["recovered"],
+            "todayRecovered": i["todayRecovered"],
+            "tests": i["tests"],
+        }
+
+    return current_stats
 
 
 def get_data(country, data):

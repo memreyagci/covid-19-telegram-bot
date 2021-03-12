@@ -33,7 +33,7 @@ def connection():
         conn.close()
 
 
-def get(cursor, column, table, where1=None, where2=None) -> list:
+def get(cursor, column, table, where1=None, where2=None, multiple=False) -> list:
     """Fetches data from the database
 
     Args:
@@ -55,7 +55,7 @@ def get(cursor, column, table, where1=None, where2=None) -> list:
 
     try:
         for row in cursor.fetchall():
-            result.append(row[0])
+            result.append(row[0]) if multiple == False else result.append(row)
         return result
     except:
         return []

@@ -106,7 +106,6 @@ def subscribe(update, context):
                 nonsubscribed = db.get_nonsubscribed_by_continent(
                     cursor, tid, query_data
                 )
-
             countries_menu(context, query, query_data, nonsubscribed, callback_to)
         # Subscribe to selected country
         elif query_data in COUNTRIES:
@@ -216,10 +215,10 @@ def get(update, context):
                     chat_id=query.message.chat_id,
                     message_id=query.message.message_id,
                     text=f"""In {country},
-                    \nnumber of cases is {all_["cases"]},
-                    \nnumber of deaths is {all_["deaths"]},
-                    \nnumber of recovered is {all_["recovered"]},
-                    \nand number of tests is {all_["tests"]}""",
+                    \nnumber of cases is {all_["cases"]:,},
+                    \nnumber of deaths is {all_["deaths"]:,},
+                    \nnumber of recovered is {all_["recovered"]:,},
+                    \nand number of tests is {all_["tests"],}""",
                 )
             else:
                 amount = jobs.get_data(country, data)
@@ -264,50 +263,36 @@ def continents_menu(update, context, query, callback_to):
 
 def update_job(context):
     with db.connection() as cursor:
-        for country in COUNTRIES:
-            cases = db.get(cursor, "cases", "country", "name", country)[0]
-            deaths = db.get(cursor, "deaths", "country", "name", country)[0]
-            recovered = db.get(cursor, "recovered", "country", "name", country)[0]
-            tests = db.get(cursor, "tests", "country", "name", country)[0]
+        updates = jobs.check_updates(
+            jobs.get_last_data(db.get(cursor, "*", "country", multiple=True)),
+            jobs.get_current(),
+        )
 
-            updates = jobs.check_updates(country, cases, deaths, recovered, tests)
-
-            if isinstance(updates, dict):
-                if updates["cases"] != []:
-                    db.update(
-                        cursor, "country", "cases", updates["cases"][0], "name", country
-                    )
-                if updates["deaths"] != []:
+    for country in updates.keys():
+        for data in updates[country].keys():
+            if "difference" not in data and "today" not in data:
+                with db.connection() as cursor:
                     db.update(
                         cursor,
                         "country",
-                        "deaths",
-                        updates["deaths"][0],
+                        data,
+                        updates[country][data]["total"],
                         "name",
                         country,
-                    )
-                if updates["recovered"] != []:
-                    db.update(
-                        cursor,
-                        "country",
-                        "recovered",
-                        updates["recovered"][0],
-                        "name",
-                        country,
-                    )
-                if updates["tests"] != []:
-                    db.update(
-                        cursor, "country", "tests", updates["tests"][0], "name", country
                     )
 
-                users = db.get_users(cursor)
-                message = jobs.generate_update_message(country, updates)
-                for user in users:
-                    if country == user[1]:
-                        try:
-                            context.bot.send_message(chat_id=user[0], text=message)
-                        except telegram.error.Unauthorized:
-                            db.delete_user(cursor, user[0])
+    with db.connection() as cursor:
+        users = db.get_users(cursor)
+
+    messages = jobs.generate_update_message(updates)
+
+    for user in users:
+        if user[1] in messages.keys():
+            try:
+                context.bot.send_message(chat_id=user[0], text=messages[user[1]])
+            except telegram.error.Unauthorized:
+                with db.connection() as cursor:
+                    db.delete_user(cursor, user[0])
 
 
 if __name__ == "__main__":
