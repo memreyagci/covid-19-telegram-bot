@@ -218,11 +218,12 @@ def get_country_alpha2(country):
 
     Raises:
         KeyError: If a country does not exist in pycountry_convert module.
+        TypeError: If a country does not exist in pycountry_convert module.
     """
 
     try:
         code = pycountry_convert.country_name_to_country_alpha2(country)
-    except KeyError:
+    except (KeyError, TypeError):
         code = requests.get(f"https://corona.lmao.ninja/v2/countries/{country}").json()[
             "countryInfo"
         ]["iso2"]

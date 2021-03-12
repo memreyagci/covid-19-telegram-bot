@@ -61,38 +61,28 @@ def by_continent(countries, callback_to):
 
 
 def continents(callback_to):
-    return (
-        InlineKeyboardMarkup(
+    return InlineKeyboardMarkup(
+        [
             [
-                [
-                    InlineKeyboardButton("Asia", callback_data=f"{callback_to}_Asia"),
-                    InlineKeyboardButton(
-                        "Africa", callback_data=f"{callback_to}_Africa"
-                    ),
-                ],
-                [
-                    InlineKeyboardButton(
-                        "North America", callback_data=f"{callback_to}_North America"
-                    ),
-                    InlineKeyboardButton(
-                        "South America", callback_data=f"{callback_to}_South America"
-                    ),
-                ],
-                [
-                    InlineKeyboardButton(
-                        "Antarctica", callback_data=f"{callback_to}_Antarctica"
-                    ),
-                    InlineKeyboardButton(
-                        "Europe", callback_data=f"{callback_to}_Europe"
-                    ),
-                ],
-                [
-                    InlineKeyboardButton(
-                        "Oceania", callback_data=f"{callback_to}_Oceania"
-                    )
-                ],
-            ]
-        ),
+                InlineKeyboardButton("Asia", callback_data=f"{callback_to}_Asia"),
+                InlineKeyboardButton("Africa", callback_data=f"{callback_to}_Africa"),
+            ],
+            [
+                InlineKeyboardButton(
+                    "North America", callback_data=f"{callback_to}_North America"
+                ),
+                InlineKeyboardButton(
+                    "South America", callback_data=f"{callback_to}_South America"
+                ),
+            ],
+            [
+                InlineKeyboardButton(
+                    "Antarctica", callback_data=f"{callback_to}_Antarctica"
+                ),
+                InlineKeyboardButton("Europe", callback_data=f"{callback_to}_Europe"),
+            ],
+            [InlineKeyboardButton("Oceania", callback_data=f"{callback_to}_Oceania")],
+        ]
     )
 
 
