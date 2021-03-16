@@ -1,15 +1,15 @@
 *
 
 !.gitignore
+
 !LICENCE
 !README.md
+
+!Dockerfile
+!.dockerignore
+
 !requirements.txt
+
 !botpic.png
 
-!bot.py
-!database.py
-!get_information.py
-!jobs.py
-!keyboards_texts.py
-!texts.py
-!update_message.txt
+!*.py
