@@ -1,3 +1,4 @@
+from datetime import time
 import logging
 import os
 
@@ -309,5 +310,5 @@ if __name__ == "__main__":
     add_handlers()
 
     updater.start_polling()
-    updater.job_queue.run_repeating(update_job, interval=900, first=10)
+    updater.job_queue.run_daily(update_job, time(hour=9, minute=30))
     updater.idle()
