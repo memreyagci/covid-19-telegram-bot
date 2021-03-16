@@ -1,11 +1,11 @@
-import json
 from contextlib import contextmanager
+import json
+import os
 
 import mysql.connector
-import pycountry_convert
 from mysql.connector import Error
+import pycountry_convert
 
-import config
 import jobs
 
 
@@ -19,10 +19,10 @@ def connection():
     """
     try:
         conn = mysql.connector.connect(
-            host=config.mysql["host"],
-            database=config.mysql["database"],
-            user=config.mysql["user"],
-            password=config.mysql["password"],
+            host=os.environ.get("MYSQL_HOST"),
+            database=os.environ.get("MYSQL_DB"),
+            user=os.environ.get("MYSQL_USER"),
+            password=os.environ.get("MYSQL_PASSWORD"),
         )
     except Error as e:
         print(e)
