@@ -1,3 +1,9 @@
+""" Contains functions to create keyboards to be used in bot.py file.
+All functions return InlineKeyboardMarkup objects.
+
+The function names should be the same with the corresponding functions in texts.py, if exists.
+"""
+
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
 from jobs import get_country_flag

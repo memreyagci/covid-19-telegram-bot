@@ -1,3 +1,9 @@
+""" Contains functions that generates and returns strings to be used in bot.py file.
+
+The function names should be the same with the corresponding functions in keyboards.py, if exists.
+"""
+
+
 def github():
     return "Here is the GitHub repo of this bot. You can help me out by contributing or creating issues."
 
