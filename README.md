@@ -14,44 +14,51 @@ Statistics are fetched from [disease.sh](https://github.com/disease-sh/API "Nove
 
 <hr>
 
-### **What can this bot do?:**
+## **What can this bot do?:**
 * Sending notification when a subscribed country has new statistics.
 * Getting statistics of a country with /get command
 
 <hr>
 
-To try it out, [create yourself a bot with BotFather](https://core.telegram.org/bots#6-botfather)
+## Installation:
 
-Then, while in desired direction:
+### * Using docker:
 
+Edit the below command with the necessary environmental variables and run:
+```bash
+docker run \
+    -d --name cov19_tbot \
+    --env CVBOT_API= \
+    --env MYSQL_HOST= \
+    --env MYSQL_DB= \
+    --env MYSQL_USER= \
+    --env MYSQL_PASSWORD= \
+    meyagci/covid19-telegram-bot
+```
+
+### * Normal installation:
+
+Clone the repo to desired location:
 ```bash
 git clone https://github.com/memreyagci/covid-19-telegram-bot
 ```
 
 Install the requirements:
-
-```
+```bash
 pip install -r requirements.txt
 ```
 
-Create a file named 'database_config.py' in root directory of the repository and provide the necessary inputs:
-```python
-mysql = {
-    "host": #host,
-    "user": #user,
-    "passwd": #passwd,
-    "db": #db,
-}
-```
-
-Set your bot's api as an environmental variable:
-
+Set the following environmental variables:
 ```bash
-export CVBOT_API=
+export \
+    CVBOT_API= \ #The API retrieved from BotFather
+    MYSQL_HOST= \
+    MYSQL_DB= \
+    MYSQL_USER= \
+    MYSQL_PASSWORD= \
 ```
 
 Finally, run the bot.py file:
-
 ```bash
 python bot.py
 ```
