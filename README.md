@@ -33,7 +33,7 @@ docker run \
     --env MYSQL_DB= \
     --env MYSQL_USER= \
     --env MYSQL_PASSWORD= \
-    meyagci/covid19-telegram-bot
+    meyagci/covid-19-telegram-bot
 ```
 
 ### * Normal installation:
