@@ -1,28 +1,22 @@
 # COVID-19 Worldwide Statistics Bot for Telegram
 
-> *The Prophet (ﷺ) said, "If you hear of an outbreak of plague in a land, do not enter it; but if the plague breaks out in a place while you are in it, do not leave that place."*
-
-*Sahih Al-Bukhari, Book 76 (Book of Medicine), Hadith 43*
-
-<hr>
-
 ![Markdown Logo](./pic.png)
 
-A Telegram Bot that sends you a notification when the statistics of a country you subscribed to gets updated.
+A Telegram Bot that sends you notifications of subscribed countries' COVID statics.
 
 Statistics are fetched from [disease.sh](https://github.com/disease-sh/API "NovelCovid/API Github page")
 
 <hr>
 
 ## **What can this bot do?:**
-* Sending notification when a subscribed country has new statistics.
+* Sending notifications when a subscribed country has new statistics.
 * Getting statistics of a country with /get command
 
 <hr>
 
 ## Installation:
 
-### * Using docker:
+### * Using Docker:
 
 Edit the below command with the necessary environmental variables and run:
 ```bash
