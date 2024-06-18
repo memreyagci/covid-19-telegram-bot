@@ -29,4 +29,4 @@ tomli==2.0.0
 tornado==6.3.3
 tzdata==2021.5
 tzlocal==4.1
-urllib3==1.26.18
+urllib3==1.26.19
